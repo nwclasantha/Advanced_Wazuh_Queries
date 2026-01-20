@@ -1,5 +1,7 @@
 # 100 Advanced Wazuh DQL Queries for Deep Threat Hunting
 
+<img width="2355" height="948" alt="image" src="https://github.com/user-attachments/assets/9988b52b-cc87-4051-b47b-50a53402e9ca" />
+
 ## Wazuh SIEM v4.11.2 | Expert-Level Security Analytics
 
 **For Senior SOC Analysts, Threat Hunters, Incident Responders & Red Team Detection**
