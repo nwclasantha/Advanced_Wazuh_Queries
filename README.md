@@ -131,7 +131,7 @@ For this, use the time picker's "Absolute" option to set specific dates.
 agent.name:"web-*" AND rule.groups:"web_application_attack"
 ```
 
-**Cross-Server Attack Correlation:**
+**Attack Correlation:**
 ```
 (agent.name:"web-01" OR agent.name:"web-02" OR agent.name:"app-01") AND data.srcip:"192.168.1.100" AND rule.groups:"attack"
 ```
