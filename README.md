@@ -1,3 +1,7 @@
+<img width="1791" height="763" alt="image" src="https://github.com/user-attachments/assets/974d84b7-9abd-4018-9266-a5063d676bac" />
+
+<img width="1732" height="686" alt="image" src="https://github.com/user-attachments/assets/8295451b-3b22-4a6e-b2b7-8afce0d80210" />
+
 # Practical Implementation Guide: Advanced Wazuh Queries on v4.11.2
 
 <img width="2355" height="948" alt="image" src="https://github.com/user-attachments/assets/b44b077b-59a4-4084-a850-8b9ec87c3244" />
