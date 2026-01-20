@@ -1,6 +1,6 @@
 # Practical Implementation Guide: Advanced Wazuh Queries on v4.11.2
 
-<img width="2052" height="1125" alt="image" src="https://github.com/user-attachments/assets/ca97602d-b7f4-42be-9df1-a68a34a6d1e1" />
+<img width="2355" height="948" alt="image" src="https://github.com/user-attachments/assets/b44b077b-59a4-4084-a850-8b9ec87c3244" />
 
 This guide translates the queries from your "Advanced Wazuh Security Analytics Professional Guide" into practical, actionable steps for Wazuh 4.11.2.
 
