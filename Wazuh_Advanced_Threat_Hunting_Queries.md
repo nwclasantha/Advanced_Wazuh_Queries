@@ -1,5 +1,7 @@
 # WAZUH SIEM - Advanced Threat Hunting & Investigation Queries
 
+<img width="2052" height="1125" alt="image" src="https://github.com/user-attachments/assets/c95dccaa-90f8-4f9e-9071-e0427c90e6d1" />
+
 ## Version 4.11.2 | 100+ Advanced DQL & Elasticsearch DSL Queries
 
 **For SOC Analysts, Threat Hunters & Incident Responders**
