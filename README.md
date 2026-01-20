@@ -139,6 +139,66 @@ agent.name:"web-*" AND rule.groups:"web_application_attack"
 rule.level >= 7 and (rule.groups:"attack" or rule.groups:"exploit" or rule.groups:"authentication_failed" or rule.groups:"invalid_login" or rule.groups:"brute_force" or rule.groups:"dos" or rule.groups:"ddos" or rule.groups:"sql_injection" or rule.groups:"web" or rule.groups:"intrusion_detection" or rule.groups:"rootkit" or rule.groups:"malware" or rule.groups:"trojan" or rule.groups:"backdoor" or rule.groups:"scan" or rule.groups:"reconnaissance")
 ```
 
+```
+rule.level >= 10 and (rule.groups:"attack" or rule.groups:"exploit" or rule.groups:"authentication_failed" or rule.groups:"brute_force" or rule.groups:"rootkit" or rule.groups:"malware" or rule.groups:"trojan" or rule.groups:"backdoor" or rule.groups:"intrusion_detection")
+```
+
+```
+rule.level >= 5 and (rule.groups:"authentication_failed" or rule.groups:"invalid_login" or rule.groups:"brute_force" or rule.groups:"authentication_success" or rule.groups:"login" or rule.groups:"pam" or rule.groups:"sshd" or rule.groups:"win_authentication_failed")
+```
+
+```
+rule.level >= 5 and (rule.groups:"web" or rule.groups:"attack" or rule.groups:"sql_injection" or rule.groups:"xss" or rule.groups:"csrf" or rule.groups:"web_application_attack" or rule.groups:"apache" or rule.groups:"nginx" or rule.groups:"accesslog")
+```
+
+```
+rule.level >= 5 and (rule.groups:"malware" or rule.groups:"rootkit" or rule.groups:"trojan" or rule.groups:"backdoor" or rule.groups:"virus" or rule.groups:"worm" or rule.groups:"ransomware" or rule.groups:"suspicious_file")
+```
+
+```
+rule.level >= 5 and (rule.groups:"scan" or rule.groups:"reconnaissance" or rule.groups:"network_scan" or rule.groups:"port_scan" or rule.groups:"nmap" or rule.groups:"discovery" or rule.groups:"enumeration")
+```
+
+```
+rule.level >= 7 and (rule.groups:"privilege_escalation" or rule.groups:"lateral_movement" or rule.groups:"sudo" or rule.groups:"su" or rule.groups:"admin" or rule.groups:"root" or rule.groups:"elevation")
+```
+
+```
+rule.level >= 7 and (rule.groups:"syscheck" or rule.groups:"fim" or rule.groups:"file_integrity" or rule.groups:"file_modified" or rule.groups:"file_added" or rule.groups:"file_deleted")
+```
+
+```
+rule.level >= 5 and (rule.groups:"windows" or rule.groups:"win_authentication_failed" or rule.groups:"windows_security" or rule.groups:"powershell" or rule.groups:"sysmon" or rule.groups:"win_eventlog")
+```
+
+```
+rule.level >= 5 and (rule.groups:"firewall" or rule.groups:"iptables" or rule.groups:"drop" or rule.groups:"deny" or rule.groups:"block" or rule.groups:"reject" or rule.groups:"connection_refused")
+```
+
+```
+rule.level >= 5 and (rule.groups:"policy_violation" or rule.groups:"anomaly" or rule.groups:"suspicious" or rule.groups:"violation" or rule.groups:"compliance" or rule.groups:"audit")
+```
+
+```
+rule.level >= 5 and (rule.groups:"config_changed" or rule.groups:"system_audit" or rule.groups:"service" or rule.groups:"process" or rule.groups:"package" or rule.groups:"user_management")
+```
+
+```
+rule.level >= 7 and (rule.groups:"data_exfiltration" or rule.groups:"exfiltration" or rule.groups:"suspicious_connection" or rule.groups:"outbound" or rule.groups:"upload" or rule.groups:"transfer")
+```
+
+```
+rule.level >= 5 and (rule.groups:"dos" or rule.groups:"ddos" or rule.groups:"flood" or rule.groups:"rate_limit" or rule.groups:"connection_flood" or rule.groups:"syn_flood")
+```
+
+```
+rule.level >= 5 and (rule.groups:"sshd" or rule.groups:"ssh" or rule.groups:"ssh_authentication" or rule.groups:"invalid_login" or rule.groups:"ssh_brute_force")
+```
+
+```
+rule.level >= 12
+```
+
 **Practical Tip:** To find your agent names:
 1. Go to Endpoints → Endpoint Summary
 2. Note the exact agent names
