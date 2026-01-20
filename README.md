@@ -135,6 +135,9 @@ agent.name:"web-*" AND rule.groups:"web_application_attack"
 ```
 (agent.name:"web-01" OR agent.name:"web-02" OR agent.name:"app-01") AND data.srcip:"192.168.1.100" AND rule.groups:"attack"
 ```
+```
+rule.level >= 7 and (rule.groups:"attack" or rule.groups:"exploit" or rule.groups:"authentication_failed" or rule.groups:"invalid_login" or rule.groups:"brute_force" or rule.groups:"dos" or rule.groups:"ddos" or rule.groups:"sql_injection" or rule.groups:"web" or rule.groups:"intrusion_detection" or rule.groups:"rootkit" or rule.groups:"malware" or rule.groups:"trojan" or rule.groups:"backdoor" or rule.groups:"scan" or rule.groups:"reconnaissance")
+```
 
 **Practical Tip:** To find your agent names:
 1. Go to Endpoints → Endpoint Summary
