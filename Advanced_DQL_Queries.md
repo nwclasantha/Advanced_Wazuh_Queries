@@ -458,7 +458,7 @@ rule.level >= 12 and (rule.groups:"rootkit" or rule.groups:"malware") and (rule.
 *Detects heavily obfuscated commands and files*
 
 ```
-rule.level >= 10 and (rule.groups:"sysmon" or rule.groups:"powershell") and (data.win.eventdata.commandLine:*"^"^"^"* or data.win.eventdata.commandLine:*"+"+"+"* or data.win.eventdata.scriptBlockText:*"^"^"^"* or data.win.eventdata.scriptBlockText:*"+"+"+"*)
+rule.level >= 10 and (rule.groups:"sysmon" or rule.groups:"powershell") and (data.win.eventdata.commandLine:"*^^^*" or data.win.eventdata.commandLine:"*+++*" or data.win.eventdata.scriptBlockText:"*^^^*" or data.win.eventdata.scriptBlockText:"*+++*")
 ```
 
 ### Query 60: Impair Defenses - Firewall Modification
@@ -666,7 +666,7 @@ rule.level >= 8 and rule.groups:"sysmon" and rule.id:"60011" and (data.win.event
 *Detects large file transfers (potential exfiltration)*
 
 ```
-rule.level >= 7 and (rule.groups:"web" or rule.groups:"firewall" or rule.groups:"proxy") and data.bytes_sent:>10000000
+rule.level >= 7 and (rule.groups:"web" or rule.groups:"firewall" or rule.groups:"proxy") and data.bytes_sent > 10000000
 ```
 
 ### Query 88: Cloud Storage Upload Detection
@@ -680,7 +680,7 @@ rule.level >= 7 and (rule.groups:"proxy" or rule.groups:"web" or rule.groups:"fi
 *Detects DNS tunneling and exfiltration*
 
 ```
-rule.level >= 10 and rule.groups:"dns" and (data.query_length:>50 or rule.description:"*tunnel*" or rule.description:"*exfiltration*")
+rule.level >= 10 and rule.groups:"dns" and (data.query_length > 50 or rule.description:"*tunnel*" or rule.description:"*exfiltration*")
 ```
 
 ### Query 90: FTP/SFTP File Transfers
@@ -705,7 +705,7 @@ rule.level >= 7 and rule.groups:"firewall" and not (data.dstport:"80" or data.ds
 *Detects persistent network connections indicative of C2 beaconing*
 
 ```
-rule.level >= 10 and (rule.groups:"network" or rule.groups:"firewall") and data.connection_duration:>3600
+rule.level >= 10 and (rule.groups:"network" or rule.groups:"firewall") and data.connection_duration > 3600
 ```
 
 ### Query 93: Non-Standard User-Agent Strings
@@ -805,7 +805,7 @@ rule.level >= 10 and (rule.groups:"firewall" or rule.groups:"ids" or rule.groups
 *MITRE Technique: T1498.002 - Reflection Amplification*
 
 ```
-rule.level >= 10 and (rule.groups:"dns" or rule.groups:"network" or rule.groups:"firewall") and (rule.description:"*DNS*amplification*" or rule.description:"*DNS*reflection*" or data.query_type:"ANY") and data.response_size:>512
+rule.level >= 10 and (rule.groups:"dns" or rule.groups:"network" or rule.groups:"firewall") and (rule.description:"*DNS*amplification*" or rule.description:"*DNS*reflection*" or data.query_type:"ANY") and data.response_size > 512
 ```
 
 ### Query 106: NTP Amplification Attack
@@ -861,7 +861,7 @@ rule.level >= 10 and (rule.groups:"sysmon" or rule.groups:"windows" or rule.grou
 *MITRE Technique: T1046 - Network Service Discovery*
 
 ```
-rule.level >= 8 and (rule.groups:"firewall" or rule.groups:"ids") and (rule.id:"5706" or rule.id:"5710") and rule.description:"*scan*" and data.alert_count:>100
+rule.level >= 8 and (rule.groups:"firewall" or rule.groups:"ids") and (rule.id:"5706" or rule.id:"5710") and rule.description:"*scan*" and data.alert_count > 100
 ```
 
 ### Query 113: Application-Layer Attack (Wordpress XML-RPC)
