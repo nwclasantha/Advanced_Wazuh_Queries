@@ -1,4 +1,4 @@
-# 100 Advanced Wazuh DQL Queries for Deep Threat Hunting
+# 115 Advanced Wazuh DQL Queries for Deep Threat Hunting
 
 <img width="2355" height="948" alt="image" src="https://github.com/user-attachments/assets/9988b52b-cc87-4051-b47b-50a53402e9ca" />
 
@@ -22,6 +22,7 @@
 8. [Lateral Movement (71-80)](#8-lateral-movement)
 9. [Collection & Exfiltration (81-90)](#9-collection--exfiltration)
 10. [Command & Control (91-100)](#10-command--control)
+11. [DoS & DDoS Attack Detection (101-115)](#11-dos--ddos-attack-detection) **NEW**
 
 ---
 
@@ -115,60 +116,60 @@ rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.originalFileNam
 rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.parentImage:"*\\WINWORD.EXE" or data.win.eventdata.parentImage:"*\\EXCEL.EXE" or data.win.eventdata.parentImage:"*\\POWERPNT.EXE" or data.win.eventdata.parentImage:"*\\OUTLOOK.EXE" or data.win.eventdata.parentImage:"*\\MSACCESS.EXE" or data.win.eventdata.parentImage:"*\\MSPUB.EXE" or data.win.eventdata.parentImage:"*\\ONENOTE.EXE") and (data.win.eventdata.image:"*\\cmd.exe" or data.win.eventdata.image:"*\\powershell.exe" or data.win.eventdata.image:"*\\wscript.exe" or data.win.eventdata.image:"*\\cscript.exe" or data.win.eventdata.image:"*\\mshta.exe" or data.win.eventdata.image:"*\\certutil.exe" or data.win.eventdata.image:"*\\bitsadmin.exe" or data.win.eventdata.image:"*\\regsvr32.exe" or data.win.eventdata.image:"*\\rundll32.exe")
 ```
 
-### Query 13: Browser Spawning Suspicious Processes
-*Detects browsers launching potentially malicious child processes*
+### Query 13: Living-Off-The-Land Binaries (LOLBins) Abuse
+*Detects abuse of legitimate Windows binaries for malicious purposes*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.parentImage:"*\\chrome.exe" or data.win.eventdata.parentImage:"*\\firefox.exe" or data.win.eventdata.parentImage:"*\\iexplore.exe" or data.win.eventdata.parentImage:"*\\msedge.exe" or data.win.eventdata.parentImage:"*\\opera.exe" or data.win.eventdata.parentImage:"*\\brave.exe") and (data.win.eventdata.image:"*\\cmd.exe" or data.win.eventdata.image:"*\\powershell.exe" or data.win.eventdata.image:"*\\wscript.exe" or data.win.eventdata.image:"*\\cscript.exe" or data.win.eventdata.image:"*\\mshta.exe")
+rule.level >= 8 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*certutil*-decode*" or data.win.eventdata.commandLine:"*certutil*-urlcache*" or data.win.eventdata.commandLine:"*bitsadmin*/transfer*" or data.win.eventdata.commandLine:"*regsvr32*/s*/u*/i:http*" or data.win.eventdata.commandLine:"*rundll32*javascript:*" or data.win.eventdata.commandLine:"*mshta*http*" or data.win.eventdata.commandLine:"*mshta*javascript:*" or data.win.eventdata.commandLine:"*wmic*process*call*create*" or data.win.eventdata.commandLine:"*forfiles*/p*c:*cmd*" or data.win.eventdata.commandLine:"*msiexec*/q*/i*http*" or data.win.eventdata.commandLine:"*odbcconf*/a*{REGSVR*")
 ```
 
-### Query 14: Suspicious Process from Temp/Download Directories
-*Detects process execution from suspicious locations*
+### Query 14: DLL Injection & Process Injection
+*Detects process injection techniques via DLL loading*
 
 ```
-rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\Temp\\*" or data.win.eventdata.image:"*\\tmp\\*" or data.win.eventdata.image:"*\\Downloads\\*" or data.win.eventdata.image:"*\\AppData\\Local\\Temp\\*" or data.win.eventdata.image:"*\\AppData\\Roaming\\*" or data.win.eventdata.image:"*\\ProgramData\\*" or data.win.eventdata.image:"*\\Users\\Public\\*" or data.win.eventdata.image:"*\\Windows\\Temp\\*" or data.win.eventdata.image:"*\\$Recycle.Bin\\*")
+rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60007" or rule.id:"60010") and (data.win.eventdata.imageLoaded:"*\\Temp\\*" or data.win.eventdata.imageLoaded:"*\\AppData\\*" or data.win.eventdata.imageLoaded:"*\\ProgramData\\*" or data.win.eventdata.signed:"false")
 ```
 
-### Query 15: Linux Reverse Shell Detection
-*Detects common reverse shell patterns on Linux*
+### Query 15: Suspicious Script Execution (VBS, JS, BAT, PS1)
+*Detects execution of scripts from suspicious locations*
 
 ```
-rule.level >= 12 and (rule.groups:"audit" or rule.groups:"sysmon" or rule.groups:"command") and (data.command:"*bash -i*" or data.command:"*/dev/tcp/*" or data.command:"*/dev/udp/*" or data.command:"*nc -e*" or data.command:"*nc -c*" or data.command:"*netcat -e*" or data.command:"*ncat -e*" or data.command:"*python*socket*" or data.command:"*python*pty.spawn*" or data.command:"*perl*socket*" or data.command:"*php -r*socket*" or data.command:"*ruby*TCPSocket*" or data.command:"*socat*exec*" or data.command:"*mkfifo*" or data.command:"*mknod*")
+rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\wscript.exe" or data.win.eventdata.image:"*\\cscript.exe") and (data.win.eventdata.commandLine:"*\\Temp\\*.vbs" or data.win.eventdata.commandLine:"*\\Temp\\*.js" or data.win.eventdata.commandLine:"*\\AppData\\*.vbs" or data.win.eventdata.commandLine:"*\\AppData\\*.js" or data.win.eventdata.commandLine:"*\\Downloads\\*.vbs" or data.win.eventdata.commandLine:"*\\Downloads\\*.js" or data.win.eventdata.commandLine:"*\\ProgramData\\*.vbs" or data.win.eventdata.commandLine:"*\\ProgramData\\*.js")
 ```
 
-### Query 16: Windows Reverse Shell Detection
-*Detects reverse shell creation on Windows*
+### Query 16: Process Hollowing Detection
+*Detects process hollowing using parent-child process anomalies*
 
 ```
-rule.level >= 12 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*TCPClient*" or data.win.eventdata.commandLine:"*Net.Sockets*" or data.win.eventdata.commandLine:"*System.Net.Sockets*" or data.win.eventdata.commandLine:"*invoke-expression*" or data.win.eventdata.commandLine:"*downloadstring*" or data.win.eventdata.commandLine:"*nishang*" or data.win.eventdata.commandLine:"*powercat*" or data.win.eventdata.commandLine:"*Invoke-PowerShellTcp*" or data.win.eventdata.commandLine:"*-e cmd.exe*" or data.win.eventdata.commandLine:"*nc.exe*-e*")
+rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60001" and (data.win.eventdata.parentImage:"*\\svchost.exe" or data.win.eventdata.parentImage:"*\\explorer.exe" or data.win.eventdata.parentImage:"*\\services.exe") and (data.win.eventdata.image:"*\\Temp\\*" or data.win.eventdata.image:"*\\AppData\\*" or data.win.eventdata.commandLine:"*suspend*")
 ```
 
-### Query 17: Process Hollowing Indicators
-*Detects process hollowing technique indicators*
+### Query 17: Unsigned Process Execution from Non-Standard Paths
+*Detects unsigned binaries running from suspicious directories*
 
 ```
-rule.level >= 12 and rule.groups:"sysmon" and (rule.id:"60008" or rule.description:"*hollow*" or rule.description:"*inject*" or rule.description:"*NtUnmapViewOfSection*" or rule.description:"*WriteProcessMemory*" or rule.description:"*SetThreadContext*" or rule.description:"*ResumeThread*" or rule.description:"*VirtualAllocEx*")
+rule.level >= 7 and rule.groups:"sysmon" and rule.id:"60001" and data.win.eventdata.signed:"false" and (data.win.eventdata.image:"*\\Temp\\*" or data.win.eventdata.image:"*\\AppData\\Roaming\\*" or data.win.eventdata.image:"*\\Users\\Public\\*" or data.win.eventdata.image:"*\\ProgramData\\*" or data.win.eventdata.image:"*C:\\Users\\*\\Downloads\\*")
 ```
 
-### Query 18: DLL Search Order Hijacking
-*Detects DLL hijacking attempts*
+### Query 18: WMI Process Creation
+*Detects processes created via WMI (common in lateral movement)*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60007" or rule.description:"*DLL*hijack*" or rule.description:"*side-load*" or rule.description:"*sideload*") and (data.win.eventdata.imageLoaded:"*\\Temp\\*" or data.win.eventdata.imageLoaded:"*\\Downloads\\*" or data.win.eventdata.imageLoaded:"*\\AppData\\*" or data.win.eventdata.imageLoaded:"*\\ProgramData\\*" or data.win.eventdata.imageLoaded:"*\\Users\\Public\\*")
+rule.level >= 8 and rule.groups:"sysmon" and rule.id:"60001" and data.win.eventdata.parentImage:"*\\WmiPrvSE.exe"
 ```
 
-### Query 19: Suspicious Child Process of System Processes
-*Detects anomalous child processes from Windows system binaries*
+### Query 19: Remote Thread Creation
+*Detects CreateRemoteThread API usage (injection technique)*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.parentImage:"*\\services.exe" or data.win.eventdata.parentImage:"*\\svchost.exe" or data.win.eventdata.parentImage:"*\\lsass.exe" or data.win.eventdata.parentImage:"*\\smss.exe" or data.win.eventdata.parentImage:"*\\csrss.exe" or data.win.eventdata.parentImage:"*\\wininit.exe" or data.win.eventdata.parentImage:"*\\winlogon.exe") and (data.win.eventdata.image:"*\\cmd.exe" or data.win.eventdata.image:"*\\powershell.exe" or data.win.eventdata.image:"*\\wscript.exe" or data.win.eventdata.image:"*\\cscript.exe" or data.win.eventdata.image:"*\\mshta.exe" or data.win.eventdata.image:"*\\certutil.exe")
+rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60008" and not (data.win.eventdata.sourceImage:"*\\System32\\*" or data.win.eventdata.sourceImage:"*\\SysWOW64\\*")
 ```
 
-### Query 20: Suspicious Command Line Patterns
-*Detects suspicious command line argument patterns*
+### Query 20: Fileless Malware Indicators
+*Detects indicators of fileless/memory-only malware execution*
 
 ```
-rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*-nop*" or data.win.eventdata.commandLine:"*-noni*" or data.win.eventdata.commandLine:"*-w hidden*" or data.win.eventdata.commandLine:"*-window hidden*" or data.win.eventdata.commandLine:"*-ep bypass*" or data.win.eventdata.commandLine:"*-exec bypass*" or data.win.eventdata.commandLine:"*-executionpolicy bypass*" or data.win.eventdata.commandLine:"*-enc*" or data.win.eventdata.commandLine:"*-encoded*" or data.win.eventdata.commandLine:"*-e JAB*" or data.win.eventdata.commandLine:"*-e SQBF*" or data.win.eventdata.commandLine:"*-e SQB*" or data.win.eventdata.commandLine:"*-e aQB*" or data.win.eventdata.commandLine:"*-e cwB*" or data.win.eventdata.commandLine:"*-e dwB*")
+rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*IEX*" or data.win.eventdata.commandLine:"*Invoke-Expression*" or data.win.eventdata.commandLine:"*DownloadString*" or data.win.eventdata.commandLine:"*DownloadData*" or data.win.eventdata.commandLine:"*FromBase64String*" or data.win.eventdata.commandLine:"*-EncodedCommand*" or data.win.eventdata.commandLine:"*-enc*" or data.win.eventdata.commandLine:"*ReflectivePEInjection*" or data.win.eventdata.commandLine:"*Invoke-Shellcode*")
 ```
 
 ---
@@ -176,542 +177,542 @@ rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*-
 ## 3. PowerShell & Script Attacks
 
 ### Query 21: PowerShell Download Cradles
-*Detects various PowerShell download techniques*
+*Detects PowerShell downloading files from the internet*
 
 ```
-rule.level >= 10 and (rule.groups:"powershell" or rule.groups:"sysmon") and (data.win.eventdata.commandLine:"*DownloadString*" or data.win.eventdata.commandLine:"*DownloadFile*" or data.win.eventdata.commandLine:"*DownloadData*" or data.win.eventdata.commandLine:"*Invoke-WebRequest*" or data.win.eventdata.commandLine:"*iwr *" or data.win.eventdata.commandLine:"*wget *" or data.win.eventdata.commandLine:"*curl *" or data.win.eventdata.commandLine:"*Net.WebClient*" or data.win.eventdata.commandLine:"*Start-BitsTransfer*" or data.win.eventdata.commandLine:"*bitsadmin*" or data.win.eventdata.commandLine:"*certutil*-urlcache*" or data.win.eventdata.commandLine:"*Invoke-RestMethod*" or data.win.eventdata.commandLine:"*irm *")
+rule.level >= 10 and rule.groups:"powershell" and (data.win.eventdata.scriptBlockText:"*Net.WebClient*" or data.win.eventdata.scriptBlockText:"*DownloadString*" or data.win.eventdata.scriptBlockText:"*DownloadFile*" or data.win.eventdata.scriptBlockText:"*Invoke-WebRequest*" or data.win.eventdata.scriptBlockText:"*iwr*" or data.win.eventdata.scriptBlockText:"*wget*" or data.win.eventdata.scriptBlockText:"*curl*" or data.win.eventdata.scriptBlockText:"*BitsTransfer*" or data.win.eventdata.scriptBlockText:"*Start-BitsTransfer*")
 ```
 
-### Query 22: PowerShell Encoded Command Execution
-*Detects Base64 encoded PowerShell commands*
+### Query 22: PowerShell Encoded Commands
+*Detects obfuscated/encoded PowerShell execution*
 
 ```
-rule.level >= 10 and (rule.groups:"powershell" or rule.groups:"sysmon") and (data.win.eventdata.commandLine:"*-enc *" or data.win.eventdata.commandLine:"*-EncodedCommand*" or data.win.eventdata.commandLine:"*-ec *" or data.win.eventdata.commandLine:"*FromBase64String*" or data.win.eventdata.commandLine:"*[Convert]::FromBase64*" or data.win.eventdata.commandLine:"*[System.Convert]::FromBase64*" or data.win.eventdata.commandLine:"*[Text.Encoding]::*" or data.win.eventdata.commandLine:"*[IO.MemoryStream]*" or data.win.eventdata.commandLine:"*DeflateStream*" or data.win.eventdata.commandLine:"*GzipStream*")
+rule.level >= 10 and rule.groups:"powershell" and (data.win.eventdata.commandLine:"*-EncodedCommand*" or data.win.eventdata.commandLine:"*-enc*" or data.win.eventdata.commandLine:"*-e *" or data.win.eventdata.scriptBlockText:"*FromBase64String*" or data.win.eventdata.scriptBlockText:"*ToBase64String*")
 ```
 
-### Query 23: PowerShell AMSI Bypass Attempts
-*Detects attempts to bypass Antimalware Scan Interface*
+### Query 23: PowerShell Execution Policy Bypass
+*Detects attempts to bypass PowerShell execution policy*
 
 ```
-rule.level >= 12 and (rule.groups:"powershell" or rule.groups:"sysmon") and (data.win.eventdata.commandLine:"*AmsiUtils*" or data.win.eventdata.commandLine:"*amsiInitFailed*" or data.win.eventdata.commandLine:"*AmsiScanBuffer*" or data.win.eventdata.commandLine:"*amsi.dll*" or data.win.eventdata.commandLine:"*Reflection.Assembly*" or data.win.eventdata.commandLine:"*System.Management.Automation.AmsiUtils*" or data.win.eventdata.commandLine:"*AmsiContext*" or data.win.eventdata.commandLine:"*Disable-Amsi*")
+rule.level >= 8 and rule.groups:"powershell" and (data.win.eventdata.commandLine:"*-ExecutionPolicy Bypass*" or data.win.eventdata.commandLine:"*-ep bypass*" or data.win.eventdata.commandLine:"*-ExecutionPolicy Unrestricted*" or data.win.eventdata.commandLine:"*Set-ExecutionPolicy*")
 ```
 
-### Query 24: PowerShell Constrained Language Mode Bypass
-*Detects attempts to bypass PowerShell Constrained Language Mode*
+### Query 24: PowerShell Empire/Metasploit Indicators
+*Detects common frameworks like Empire, Metasploit, Covenant*
 
 ```
-rule.level >= 12 and (rule.groups:"powershell" or rule.groups:"sysmon") and (data.win.eventdata.commandLine:"*FullLanguage*" or data.win.eventdata.commandLine:"*LanguageMode*" or data.win.eventdata.commandLine:"*PSLockdownPolicy*" or data.win.eventdata.commandLine:"*__PSLockdownPolicy*" or data.win.eventdata.commandLine:"*SystemPolicy*" or data.win.eventdata.commandLine:"*ExecutionContext*" or data.win.eventdata.commandLine:"*SessionStateInternal*")
+rule.level >= 12 and rule.groups:"powershell" and (data.win.eventdata.scriptBlockText:"*Invoke-Mimikatz*" or data.win.eventdata.scriptBlockText:"*Invoke-Empire*" or data.win.eventdata.scriptBlockText:"*Invoke-Shellcode*" or data.win.eventdata.scriptBlockText:"*Invoke-Kerberoast*" or data.win.eventdata.scriptBlockText:"*Invoke-PowerShellTcp*" or data.win.eventdata.scriptBlockText:"*Invoke-DllInjection*" or data.win.eventdata.scriptBlockText:"*Invoke-ReflectivePEInjection*" or data.win.eventdata.scriptBlockText:"*PowerSploit*" or data.win.eventdata.scriptBlockText:"*Covenant*" or data.win.eventdata.scriptBlockText:"*SharpSploit*")
 ```
 
-### Query 25: PowerShell Credential Harvesting
-*Detects credential theft via PowerShell*
+### Query 25: PowerShell Remoting Activity
+*Detects PowerShell remoting (WinRM) usage*
 
 ```
-rule.level >= 12 and (rule.groups:"powershell" or rule.groups:"sysmon") and (data.win.eventdata.commandLine:"*Get-Credential*" or data.win.eventdata.commandLine:"*PromptForCredential*" or data.win.eventdata.commandLine:"*SecureString*" or data.win.eventdata.commandLine:"*ConvertFrom-SecureString*" or data.win.eventdata.commandLine:"*NetworkCredential*" or data.win.eventdata.commandLine:"*Mimikatz*" or data.win.eventdata.commandLine:"*sekurlsa*" or data.win.eventdata.commandLine:"*logonpasswords*" or data.win.eventdata.commandLine:"*Invoke-Mimikatz*" or data.win.eventdata.commandLine:"*DumpCreds*")
+rule.level >= 7 and rule.groups:"powershell" and (data.win.eventdata.commandLine:"*Enter-PSSession*" or data.win.eventdata.commandLine:"*Invoke-Command*" or data.win.eventdata.commandLine:"*New-PSSession*" or data.win.eventdata.commandLine:"*-ComputerName*" or data.win.eventdata.scriptBlockText:"*Enter-PSSession*" or data.win.eventdata.scriptBlockText:"*Invoke-Command*")
 ```
 
-### Query 26: PowerShell Reconnaissance Commands
-*Detects PowerShell-based reconnaissance*
+### Query 26: AMSI Bypass Attempts
+*Detects Antimalware Scan Interface (AMSI) bypass techniques*
 
 ```
-rule.level >= 7 and (rule.groups:"powershell" or rule.groups:"sysmon") and (data.win.eventdata.commandLine:"*Get-ADUser*" or data.win.eventdata.commandLine:"*Get-ADComputer*" or data.win.eventdata.commandLine:"*Get-ADGroup*" or data.win.eventdata.commandLine:"*Get-ADDomain*" or data.win.eventdata.commandLine:"*Get-NetUser*" or data.win.eventdata.commandLine:"*Get-NetComputer*" or data.win.eventdata.commandLine:"*Get-NetGroup*" or data.win.eventdata.commandLine:"*Get-NetDomain*" or data.win.eventdata.commandLine:"*Get-DomainUser*" or data.win.eventdata.commandLine:"*Get-DomainComputer*" or data.win.eventdata.commandLine:"*Get-DomainController*" or data.win.eventdata.commandLine:"*Find-LocalAdminAccess*" or data.win.eventdata.commandLine:"*Invoke-UserHunter*" or data.win.eventdata.commandLine:"*Invoke-ShareFinder*")
+rule.level >= 12 and rule.groups:"powershell" and (data.win.eventdata.scriptBlockText:"*AmsiScanBuffer*" or data.win.eventdata.scriptBlockText:"*amsiInitFailed*" or data.win.eventdata.scriptBlockText:"*AmsiUtils*" or data.win.eventdata.scriptBlockText:"*Patch*AMSI*" or data.win.eventdata.scriptBlockText:"*Bypass*AMSI*" or data.win.eventdata.commandLine:"*Reflection.Assembly*" or data.win.eventdata.scriptBlockText:"*System.Management.Automation.AmsiUtils*")
 ```
 
-### Query 27: PowerShell Empire/Covenant Indicators
-*Detects common C2 framework PowerShell patterns*
+### Query 27: PowerShell Credential Access
+*Detects PowerShell credential theft techniques*
 
 ```
-rule.level >= 12 and (rule.groups:"powershell" or rule.groups:"sysmon") and (data.win.eventdata.commandLine:"*Empire*" or data.win.eventdata.commandLine:"*Invoke-Empire*" or data.win.eventdata.commandLine:"*Covenant*" or data.win.eventdata.commandLine:"*Grunt*" or data.win.eventdata.commandLine:"*Invoke-Obfuscation*" or data.win.eventdata.commandLine:"*Invoke-CradleCrafter*" or data.win.eventdata.commandLine:"*Out-EncodedCommand*" or data.win.eventdata.commandLine:"*PoshC2*" or data.win.eventdata.commandLine:"*Merlin*")
+rule.level >= 12 and rule.groups:"powershell" and (data.win.eventdata.scriptBlockText:"*Get-Credential*" or data.win.eventdata.scriptBlockText:"*ConvertTo-SecureString*" or data.win.eventdata.scriptBlockText:"*System.Net.CredentialCache*" or data.win.eventdata.scriptBlockText:"*PasswordVault*" or data.win.eventdata.scriptBlockText:"*Get-StoredCredential*" or data.win.eventdata.scriptBlockText:"*Invoke-Mimikatz*" or data.win.eventdata.scriptBlockText:"*sekurlsa::*")
 ```
 
-### Query 28: VBScript/JScript Malicious Patterns
-*Detects suspicious VBS/JS script execution*
+### Query 28: PowerShell Persistence Mechanisms
+*Detects PowerShell-based persistence creation*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\wscript.exe" or data.win.eventdata.image:"*\\cscript.exe") and (data.win.eventdata.commandLine:"*WScript.Shell*" or data.win.eventdata.commandLine:"*Shell.Application*" or data.win.eventdata.commandLine:"*Scripting.FileSystemObject*" or data.win.eventdata.commandLine:"*MSXML2.XMLHTTP*" or data.win.eventdata.commandLine:"*WinHttp.WinHttpRequest*" or data.win.eventdata.commandLine:"*Adodb.Stream*" or data.win.eventdata.commandLine:"*CreateObject*" or data.win.eventdata.commandLine:"*.Run*" or data.win.eventdata.commandLine:"*.Exec*")
+rule.level >= 10 and rule.groups:"powershell" and (data.win.eventdata.scriptBlockText:"*New-ScheduledTask*" or data.win.eventdata.scriptBlockText:"*Register-ScheduledTask*" or data.win.eventdata.scriptBlockText:"*HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run*" or data.win.eventdata.scriptBlockText:"*HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run*" or data.win.eventdata.scriptBlockText:"*New-Service*" or data.win.eventdata.scriptBlockText:"*WMI*__EventFilter*" or data.win.eventdata.scriptBlockText:"*__EventConsumer*")
 ```
 
-### Query 29: MSHTA Abuse Detection
-*Detects MSHTA being used for malicious purposes*
+### Query 29: Suspicious PowerShell Module Loading
+*Detects loading of offensive security PowerShell modules*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and data.win.eventdata.image:"*\\mshta.exe" and (data.win.eventdata.commandLine:"*javascript:*" or data.win.eventdata.commandLine:"*vbscript:*" or data.win.eventdata.commandLine:"*http://*" or data.win.eventdata.commandLine:"*https://*" or data.win.eventdata.commandLine:"*file://*" or data.win.eventdata.commandLine:"*about:*" or data.win.eventdata.commandLine:"*ActiveXObject*" or data.win.eventdata.commandLine:"*GetObject*")
+rule.level >= 10 and rule.groups:"powershell" and (data.win.eventdata.scriptBlockText:"*Import-Module*PowerSploit*" or data.win.eventdata.scriptBlockText:"*Import-Module*Nishang*" or data.win.eventdata.scriptBlockText:"*Import-Module*Empire*" or data.win.eventdata.scriptBlockText:"*Import-Module*PowerUp*" or data.win.eventdata.scriptBlockText:"*Import-Module*Inveigh*")
 ```
 
-### Query 30: Script Interpreter Spawning Network Tools
-*Detects scripts launching network utilities*
+### Query 30: PowerShell Anti-Forensics
+*Detects log clearing and anti-forensics activities*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.parentImage:"*\\wscript.exe" or data.win.eventdata.parentImage:"*\\cscript.exe" or data.win.eventdata.parentImage:"*\\mshta.exe" or data.win.eventdata.parentImage:"*\\powershell.exe" or data.win.eventdata.parentImage:"*\\pwsh.exe") and (data.win.eventdata.image:"*\\net.exe" or data.win.eventdata.image:"*\\net1.exe" or data.win.eventdata.image:"*\\netstat.exe" or data.win.eventdata.image:"*\\nslookup.exe" or data.win.eventdata.image:"*\\ping.exe" or data.win.eventdata.image:"*\\tracert.exe" or data.win.eventdata.image:"*\\arp.exe" or data.win.eventdata.image:"*\\route.exe" or data.win.eventdata.image:"*\\ipconfig.exe" or data.win.eventdata.image:"*\\systeminfo.exe" or data.win.eventdata.image:"*\\whoami.exe" or data.win.eventdata.image:"*\\hostname.exe")
+rule.level >= 12 and rule.groups:"powershell" and (data.win.eventdata.scriptBlockText:"*Clear-EventLog*" or data.win.eventdata.scriptBlockText:"*Remove-EventLog*" or data.win.eventdata.scriptBlockText:"*wevtutil*cl*" or data.win.eventdata.scriptBlockText:"*Remove-Item*-Path*PSReadline*" or data.win.eventdata.scriptBlockText:"*Set-MpPreference*-DisableRealtimeMonitoring*")
 ```
 
 ---
 
 ## 4. Persistence Mechanisms
 
-### Query 31: Registry Run Key Persistence (Comprehensive)
-*Detects all registry-based autostart locations*
+### Query 31: Registry Run Keys Modification
+*Detects creation/modification of Windows Run registry keys*
 
 ```
-rule.level >= 7 and rule.groups:"sysmon" and (rule.id:"60004" or rule.id:"60012" or rule.id:"60013" or rule.id:"60014") and (data.win.eventdata.targetObject:"*\\CurrentVersion\\Run*" or data.win.eventdata.targetObject:"*\\CurrentVersion\\RunOnce*" or data.win.eventdata.targetObject:"*\\CurrentVersion\\RunServices*" or data.win.eventdata.targetObject:"*\\CurrentVersion\\RunServicesOnce*" or data.win.eventdata.targetObject:"*\\CurrentVersion\\Policies\\Explorer\\Run*" or data.win.eventdata.targetObject:"*\\CurrentVersion\\Windows\\Run*" or data.win.eventdata.targetObject:"*\\Wow6432Node\\*\\Run*" or data.win.eventdata.targetObject:"*\\Explorer\\User Shell Folders*" or data.win.eventdata.targetObject:"*\\Explorer\\Shell Folders*" or data.win.eventdata.targetObject:"*\\CurrentVersion\\Windows\\Load*" or data.win.eventdata.targetObject:"*\\Winlogon\\Shell*" or data.win.eventdata.targetObject:"*\\Winlogon\\Userinit*" or data.win.eventdata.targetObject:"*\\Winlogon\\Notify*")
+rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60013" and (data.win.eventdata.targetObject:"*\\Microsoft\\Windows\\CurrentVersion\\Run*" or data.win.eventdata.targetObject:"*\\Microsoft\\Windows\\CurrentVersion\\RunOnce*" or data.win.eventdata.targetObject:"*\\Microsoft\\Windows\\CurrentVersion\\RunServices*" or data.win.eventdata.targetObject:"*\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce*" or data.win.eventdata.targetObject:"*\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders*" or data.win.eventdata.targetObject:"*\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders*")
 ```
 
-### Query 32: Scheduled Task Creation (Windows)
-*Comprehensive scheduled task persistence detection*
+### Query 32: Scheduled Task Creation
+*Detects creation of scheduled tasks for persistence*
 
 ```
-rule.level >= 7 and (rule.groups:"sysmon" or rule.groups:"windows") and (rule.id:"60103" or rule.id:"60106" or rule.id:"60107" or rule.id:"4698" or rule.id:"4699" or rule.id:"4700" or rule.id:"4701" or rule.id:"4702") or (data.win.eventdata.commandLine:"*schtasks*" and (data.win.eventdata.commandLine:"*/create*" or data.win.eventdata.commandLine:"*/change*" or data.win.eventdata.commandLine:"*/run*"))
+rule.level >= 8 and (rule.groups:"sysmon" or rule.groups:"windows") and (data.win.eventdata.image:"*\\schtasks.exe" or rule.id:"60106" or rule.id:"60107") and (data.win.eventdata.commandLine:"*/create*" or data.win.eventdata.commandLine:"*/change*" or data.win.system.eventID:"4698")
 ```
 
-### Query 33: Windows Service Installation/Modification
-*Detects new or modified Windows services*
+### Query 33: Service Creation/Modification
+*Detects new service creation or modification*
 
 ```
-rule.level >= 7 and (rule.groups:"sysmon" or rule.groups:"windows") and (rule.id:"60006" or rule.id:"7045" or rule.id:"7040" or rule.id:"60009" or rule.id:"60010" or rule.id:"60011") or (data.win.eventdata.commandLine:"*sc *create*" or data.win.eventdata.commandLine:"*sc *config*" or data.win.eventdata.commandLine:"*New-Service*" or data.win.eventdata.commandLine:"*Install-Service*")
+rule.level >= 8 and rule.groups:"windows" and (rule.id:"60102" or rule.id:"60103" or data.win.system.eventID:"4697" or data.win.system.eventID:"7045") and not (data.win.eventdata.serviceName:"Windows*" or data.win.eventdata.serviceName:"Microsoft*")
 ```
 
-### Query 34: WMI Persistence Detection
-*Detects WMI event subscription persistence*
+### Query 34: WMI Event Subscription (Persistence)
+*Detects WMI event subscriptions used for persistence*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60019" or rule.id:"60020" or rule.id:"60021") or (data.win.eventdata.commandLine:"*EventConsumer*" or data.win.eventdata.commandLine:"*EventFilter*" or data.win.eventdata.commandLine:"*FilterToConsumerBinding*" or data.win.eventdata.commandLine:"*__EventFilter*" or data.win.eventdata.commandLine:"*CommandLineEventConsumer*" or data.win.eventdata.commandLine:"*ActiveScriptEventConsumer*" or data.win.eventdata.commandLine:"*Register-WmiEvent*" or data.win.eventdata.commandLine:"*Set-WmiInstance*")
+rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60019" or rule.id:"60020" or rule.id:"60021") and (data.win.eventdata.eventNamespace:"*__EventFilter*" or data.win.eventdata.eventNamespace:"*__EventConsumer*" or data.win.eventdata.eventNamespace:"*__FilterToConsumerBinding*")
 ```
 
-### Query 35: Linux Cron Persistence (Comprehensive)
-*Detects all cron-based persistence attempts*
+### Query 35: Startup Folder Modifications
+*Detects files added to Windows Startup folders*
 
 ```
-rule.level >= 7 and rule.groups:"syscheck" and (syscheck.path:"/etc/crontab" or syscheck.path:"/etc/cron.d/*" or syscheck.path:"/etc/cron.daily/*" or syscheck.path:"/etc/cron.hourly/*" or syscheck.path:"/etc/cron.weekly/*" or syscheck.path:"/etc/cron.monthly/*" or syscheck.path:"/var/spool/cron/*" or syscheck.path:"/var/spool/cron/crontabs/*" or syscheck.path:"*/anacron*" or syscheck.path:"/etc/anacrontab")
+rule.level >= 8 and rule.groups:"sysmon" and rule.id:"60011" and (data.win.eventdata.targetFilename:"*\\Start Menu\\Programs\\Startup\\*" or data.win.eventdata.targetFilename:"*\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*")
 ```
 
-### Query 36: Linux Systemd Service Persistence
-*Detects systemd-based persistence*
+### Query 36: Winlogon Helper DLL Registry Modification
+*Detects modifications to Winlogon Helper DLL registry keys*
 
 ```
-rule.level >= 7 and rule.groups:"syscheck" and (syscheck.path:"/etc/systemd/system/*" or syscheck.path:"/lib/systemd/system/*" or syscheck.path:"/usr/lib/systemd/system/*" or syscheck.path:"/run/systemd/system/*" or syscheck.path:"~/.config/systemd/user/*" or syscheck.path:"/etc/systemd/user/*")
+rule.level >= 12 and rule.groups:"sysmon" and rule.id:"60013" and (data.win.eventdata.targetObject:"*\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Shell*" or data.win.eventdata.targetObject:"*\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Userinit*" or data.win.eventdata.targetObject:"*\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Notify*")
 ```
 
-### Query 37: Linux Init Scripts & RC Files
-*Detects traditional init-based persistence*
+### Query 37: AppInit DLLs Registry Modification
+*Detects AppInit_DLLs persistence technique*
 
 ```
-rule.level >= 7 and rule.groups:"syscheck" and (syscheck.path:"/etc/init.d/*" or syscheck.path:"/etc/rc.d/*" or syscheck.path:"/etc/rc.local" or syscheck.path:"/etc/rc*.d/*" or syscheck.path:"/etc/init/*" or syscheck.path:"/etc/inittab")
+rule.level >= 12 and rule.groups:"sysmon" and rule.id:"60013" and (data.win.eventdata.targetObject:"*\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\AppInit_DLLs*" or data.win.eventdata.targetObject:"*\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\LoadAppInit_DLLs*")
 ```
 
-### Query 38: Shell Profile Persistence (Linux)
-*Detects persistence via shell profiles*
+### Query 38: Office Application Startup Persistence
+*Detects persistence via Office application startup locations*
 
 ```
-rule.level >= 7 and rule.groups:"syscheck" and (syscheck.path:"*/.bashrc" or syscheck.path:"*/.bash_profile" or syscheck.path:"*/.bash_login" or syscheck.path:"*/.profile" or syscheck.path:"/etc/profile" or syscheck.path:"/etc/profile.d/*" or syscheck.path:"/etc/bash.bashrc" or syscheck.path:"*/.zshrc" or syscheck.path:"*/.zprofile" or syscheck.path:"*/.zshenv" or syscheck.path:"/etc/zsh/*")
+rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60011" or rule.id:"60013") and (data.win.eventdata.targetFilename:"*\\Microsoft\\Word\\STARTUP\\*" or data.win.eventdata.targetFilename:"*\\Microsoft\\Excel\\XLSTART\\*" or data.win.eventdata.targetObject:"*\\Software\\Microsoft\\Office\\*\\Word\\Security\\AccessVBOM*" or data.win.eventdata.targetObject:"*\\Software\\Microsoft\\Office\\*\\Excel\\Security\\AccessVBOM*")
 ```
 
-### Query 39: COM Object Hijacking
-*Detects COM object hijacking for persistence*
+### Query 39: Browser Extension Installation
+*Detects installation of browser extensions (potential persistence)*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60004" or rule.id:"60014") and (data.win.eventdata.targetObject:"*\\InprocServer32*" or data.win.eventdata.targetObject:"*\\LocalServer32*" or data.win.eventdata.targetObject:"*\\TreatAs*" or data.win.eventdata.targetObject:"*\\ProgID*" or data.win.eventdata.targetObject:"*\\CLSID\\*\\(Default)*")
+rule.level >= 7 and rule.groups:"sysmon" and rule.id:"60011" and (data.win.eventdata.targetFilename:"*\\Google\\Chrome\\User Data\\Default\\Extensions\\*" or data.win.eventdata.targetFilename:"*\\Mozilla\\Firefox\\Profiles\\*\\extensions\\*" or data.win.eventdata.targetFilename:"*\\Microsoft\\Edge\\User Data\\Default\\Extensions\\*")
 ```
 
-### Query 40: Image File Execution Options (IFEO) Hijacking
-*Detects debugger persistence via IFEO*
+### Query 40: Screensaver Persistence
+*Detects screensaver manipulation for persistence*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60004" or rule.id:"60014") and data.win.eventdata.targetObject:"*\\Image File Execution Options\\*" and (data.win.eventdata.targetObject:"*\\Debugger*" or data.win.eventdata.targetObject:"*\\GlobalFlag*" or data.win.eventdata.targetObject:"*\\VerifierDlls*")
+rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60013" and (data.win.eventdata.targetObject:"*\\Control Panel\\Desktop\\SCRNSAVE.EXE*" or data.win.eventdata.targetObject:"*\\Control Panel\\Desktop\\ScreenSaveActive*")
 ```
 
 ---
 
 ## 5. Privilege Escalation
 
-### Query 41: Sudo Exploitation & Abuse (Linux)
-*Comprehensive sudo abuse detection*
+### Query 41: UAC Bypass Attempts
+*Detects User Account Control bypass techniques*
 
 ```
-rule.level >= 7 and rule.groups:"sudo" and (rule.id:"5401" or rule.id:"5402" or rule.id:"5403" or rule.id:"5404" or rule.id:"5405" or rule.id:"5406" or rule.id:"5407" or rule.id:"5408" or rule.id:"5409" or rule.id:"5410") or (rule.description:"*sudo*" and (rule.description:"*fail*" or rule.description:"*incorrect*" or rule.description:"*not allowed*" or rule.description:"*3 incorrect*"))
+rule.level >= 12 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*eventvwr.exe*" or data.win.eventdata.commandLine:"*fodhelper.exe*" or data.win.eventdata.commandLine:"*computerdefaults.exe*" or data.win.eventdata.commandLine:"*sdclt.exe*" or data.win.eventdata.targetObject:"*\\mscfile\\shell\\open\\command*" or data.win.eventdata.targetObject:"*\\ms-settings\\shell\\open\\command*" or data.win.eventdata.targetObject:"*\\exefile\\shell\\runas\\command\\isolatedCommand*")
 ```
 
-### Query 42: SUID/SGID Binary Manipulation
-*Detects SUID/SGID changes that could indicate privilege escalation*
+### Query 42: Token Manipulation Detection
+*Detects token impersonation and privilege escalation*
 
 ```
-rule.level >= 10 and rule.groups:"syscheck" and (syscheck.perm_after:"*s*" or rule.description:"*SUID*" or rule.description:"*SGID*" or rule.description:"*setuid*" or rule.description:"*setgid*" or rule.description:"*4755*" or rule.description:"*4711*" or rule.description:"*6755*" or rule.description:"*2755*")
+rule.level >= 12 and rule.groups:"windows" and (data.win.system.eventID:"4672" or data.win.system.eventID:"4673" or data.win.system.eventID:"4674") and data.win.eventdata.privilegeList:"*SeDebugPrivilege*"
 ```
 
-### Query 43: Windows Token Manipulation
-*Detects token theft and impersonation*
+### Query 43: Service DLL Hijacking
+*Detects DLL search order hijacking in services*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60008" or rule.description:"*token*" or rule.description:"*impersonat*" or rule.description:"*CreateToken*" or rule.description:"*DuplicateToken*" or rule.description:"*ImpersonateLoggedOnUser*" or rule.description:"*SetThreadToken*" or rule.description:"*AdjustTokenPrivileges*")
+rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60007" and (data.win.eventdata.imageLoaded:"*\\Temp\\*" or data.win.eventdata.imageLoaded:"*\\AppData\\*") and data.win.eventdata.signed:"false"
 ```
 
-### Query 44: UAC Bypass Techniques
-*Detects User Account Control bypass attempts*
+### Query 44: Credential Dumping via Task Manager
+*Detects LSASS process access for credential dumping*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*fodhelper*" or data.win.eventdata.commandLine:"*eventvwr*" or data.win.eventdata.commandLine:"*sdclt*" or data.win.eventdata.commandLine:"*computerdefaults*" or data.win.eventdata.commandLine:"*slui*" or data.win.eventdata.commandLine:"*cmstp*" or data.win.eventdata.commandLine:"*wsreset*" or data.win.eventdata.commandLine:"*DiskCleanup*" or data.win.eventdata.commandLine:"*Bypass-UAC*" or data.win.eventdata.commandLine:"*UACMe*")
+rule.level >= 12 and rule.groups:"sysmon" and rule.id:"60010" and data.win.eventdata.targetImage:"*\\lsass.exe" and not data.win.eventdata.sourceImage:"*\\System32\\*"
 ```
 
-### Query 45: Windows Named Pipe Impersonation
-*Detects named pipe token impersonation attacks*
+### Query 45: Exploitation Framework Execution
+*Detects known privilege escalation tools and frameworks*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60017" or rule.id:"60018") or (data.win.eventdata.pipeName:"*\\pipe\\*" and (rule.description:"*impersonat*" or rule.description:"*privilege*" or rule.description:"*token*"))
+rule.level >= 12 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\mimikatz.exe" or data.win.eventdata.image:"*\\procdump*" or data.win.eventdata.commandLine:"*Invoke-Mimikatz*" or data.win.eventdata.commandLine:"*Get-GPPPassword*" or data.win.eventdata.commandLine:"*Invoke-PowerUp*" or data.win.eventdata.commandLine:"*PowerUp.ps1*" or data.win.eventdata.commandLine:"*SharpUp*")
 ```
 
 ### Query 46: Kernel Driver Loading
-*Detects potentially malicious kernel driver loading*
+*Detects suspicious kernel driver loading*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60006" and (data.win.eventdata.imageLoaded:"*.sys" or data.win.eventdata.signed:"false" or data.win.eventdata.signatureStatus:"Unavailable")
+rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60006" and (data.win.eventdata.imageLoaded:"*\\Temp\\*" or data.win.eventdata.imageLoaded:"*\\Users\\*" or data.win.eventdata.signed:"false")
 ```
 
-### Query 47: Linux Kernel Module Loading
-*Detects suspicious kernel module operations*
+### Query 47: SAM Database Access
+*Detects attempts to access SAM registry hive*
 
 ```
-rule.level >= 10 and (rule.groups:"audit" or rule.groups:"sysmon" or rule.groups:"command") and (data.command:"*insmod*" or data.command:"*modprobe*" or data.command:"*rmmod*" or data.command:"*lsmod*" or rule.description:"*kernel*module*" or rule.description:"*kmod*")
+rule.level >= 12 and rule.groups:"sysmon" and (rule.id:"60012" or rule.id:"60013") and data.win.eventdata.targetObject:"*\\SAM\\SAM\\Domains\\Account\\Users\\*"
 ```
 
-### Query 48: Windows Privilege Escalation via Services
-*Detects service-based privilege escalation*
+### Query 48: PrintSpooler Exploitation (PrintNightmare)
+*Detects PrintNightmare and related Print Spooler exploits*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and data.win.eventdata.image:"*\\services.exe" and (data.win.eventdata.commandLine:"*config*" or data.win.eventdata.commandLine:"*binpath*" or data.win.eventdata.commandLine:"*start*")
+rule.level >= 12 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\spoolsv.exe" or data.win.eventdata.parentImage:"*\\spoolsv.exe") and (data.win.eventdata.image:"*\\cmd.exe" or data.win.eventdata.image:"*\\powershell.exe" or data.win.eventdata.commandLine:"*AddPrinterDriverEx*")
 ```
 
-### Query 49: AlwaysInstallElevated Exploitation
-*Detects MSI-based privilege escalation*
+### Query 49: Sudo/SUID Binary Abuse (Linux)
+*Detects privilege escalation via SUID binaries or sudo abuse on Linux*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and data.win.eventdata.image:"*\\msiexec.exe" and (data.win.eventdata.commandLine:"*/i *" or data.win.eventdata.commandLine:"*/package*" or data.win.eventdata.commandLine:"*/quiet*" or data.win.eventdata.commandLine:"*/qn*")
+rule.level >= 10 and (rule.groups:"sudo" or rule.groups:"linux") and (rule.description:"*sudo*" or rule.description:"*SUID*" or data.command:"*sudo*" or data.command:"*pkexec*")
 ```
 
-### Query 50: DLL Hijacking for Privilege Escalation
-*Detects DLL hijacking in privileged directories*
+### Query 50: Accessibility Feature Abuse (Sticky Keys)
+*Detects sticky keys and other accessibility feature backdoors*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60007" and (data.win.eventdata.imageLoaded:"*\\System32\\*" or data.win.eventdata.imageLoaded:"*\\SysWOW64\\*" or data.win.eventdata.imageLoaded:"*\\Windows\\*") and (data.win.eventdata.signed:"false" or data.win.eventdata.signatureStatus:"Unavailable")
+rule.level >= 12 and rule.groups:"sysmon" and rule.id:"60013" and (data.win.eventdata.targetObject:"*\\Image File Execution Options\\sethc.exe*" or data.win.eventdata.targetObject:"*\\Image File Execution Options\\utilman.exe*" or data.win.eventdata.targetObject:"*\\Image File Execution Options\\osk.exe*" or data.win.eventdata.targetObject:"*\\Image File Execution Options\\Magnify.exe*")
 ```
 
 ---
 
 ## 6. Defense Evasion
 
-### Query 51: Windows Event Log Clearing
-*Detects security log clearing attempts*
+### Query 51: Windows Defender Tampering
+*Detects attempts to disable or tamper with Windows Defender*
 
 ```
-rule.level >= 12 and (rule.id:"1102" or rule.id:"104" or rule.id:"60116" or rule.description:"*log*clear*" or rule.description:"*audit*log*") or (data.win.eventdata.commandLine:"*wevtutil*cl*" or data.win.eventdata.commandLine:"*Clear-EventLog*" or data.win.eventdata.commandLine:"*Remove-EventLog*" or data.win.eventdata.commandLine:"*Limit-EventLog*size*0*")
+rule.level >= 12 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*Set-MpPreference*-DisableRealtimeMonitoring*" or data.win.eventdata.commandLine:"*Set-MpPreference*-DisableBehaviorMonitoring*" or data.win.eventdata.commandLine:"*Set-MpPreference*-DisableIOAVProtection*" or data.win.eventdata.commandLine:"*Add-MpPreference*-ExclusionPath*" or data.win.eventdata.targetObject:"*\\Windows Defender\\DisableAntiSpyware*" or data.win.eventdata.targetObject:"*\\Windows Defender\\DisableAntiVirus*")
 ```
 
-### Query 52: Linux Log Tampering
-*Detects manipulation of Linux log files*
+### Query 52: Event Log Clearing
+*Detects clearing of Windows event logs*
 
 ```
-rule.level >= 10 and ((rule.groups:"syscheck" and (syscheck.path:"/var/log/*" or syscheck.path:"*/syslog*" or syscheck.path:"*/auth.log*" or syscheck.path:"*/secure*" or syscheck.path:"*/messages*" or syscheck.path:"*/audit/*")) or (data.command:"*rm*/var/log*" or data.command:"*truncate*log*" or data.command:"*shred*log*" or data.command:"*>/var/log*" or data.command:"*echo*>*log*"))
+rule.level >= 12 and rule.groups:"windows" and (data.win.system.eventID:"1102" or data.win.system.eventID:"104" or data.win.eventdata.commandLine:"*wevtutil*cl*" or data.win.eventdata.commandLine:"*Clear-EventLog*")
 ```
 
 ### Query 53: Timestomping Detection
-*Detects file timestamp manipulation*
+*Detects file timestamp modification*
 
 ```
-rule.level >= 7 and ((rule.groups:"sysmon" and rule.id:"60002") or (rule.groups:"syscheck" and rule.description:"*timestamp*") or (data.command:"*touch*-t*" or data.command:"*touch*-d*" or data.command:"*touch*--date*" or data.command:"*SetFileTime*" or data.command:"*timestomp*"))
+rule.level >= 8 and rule.groups:"sysmon" and rule.id:"60002" and data.win.eventdata.previousCreationUtcTime:* and not data.win.eventdata.image:"*\\MsiExec.exe"
 ```
 
-### Query 54: Process Injection Techniques
-*Comprehensive process injection detection*
+### Query 54: Process Masquerading
+*Detects processes with names similar to legitimate Windows processes*
 
 ```
-rule.level >= 12 and rule.groups:"sysmon" and (rule.id:"60008" or rule.id:"60010") and (rule.description:"*inject*" or rule.description:"*hollow*" or rule.description:"*CreateRemoteThread*" or rule.description:"*QueueUserAPC*" or rule.description:"*SetWindowsHookEx*" or rule.description:"*NtMapViewOfSection*" or rule.description:"*WriteProcessMemory*" or rule.description:"*VirtualAllocEx*")
+rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60001" and (data.win.eventdata.image:"*\\svchost.exe" or data.win.eventdata.image:"*\\lsass.exe" or data.win.eventdata.image:"*\\csrss.exe" or data.win.eventdata.image:"*\\smss.exe") and not (data.win.eventdata.image:"C:\\Windows\\System32\\*" or data.win.eventdata.image:"C:\\Windows\\SysWOW64\\*")
 ```
 
-### Query 55: Antivirus/EDR Tampering
-*Detects attempts to disable security tools*
+### Query 55: Indicator Removal - File Deletion
+*Detects deletion of files from suspicious locations*
 
 ```
-rule.level >= 12 and (rule.description:"*defender*disable*" or rule.description:"*antivirus*stop*" or rule.description:"*tamper*protection*" or data.win.eventdata.commandLine:"*Set-MpPreference*-Disable*" or data.win.eventdata.commandLine:"*sc*stop*WinDefend*" or data.win.eventdata.commandLine:"*net*stop*" or data.win.eventdata.commandLine:"*Uninstall-WindowsFeature*" or data.win.eventdata.commandLine:"*Remove-WindowsFeature*" or data.win.eventdata.commandLine:"*WMIC*AntiVirusProduct*")
+rule.level >= 8 and rule.groups:"sysmon" and rule.id:"60023" and (data.win.eventdata.targetFilename:"*\\Temp\\*" or data.win.eventdata.targetFilename:"*\\AppData\\*" or data.win.eventdata.targetFilename:"*.log" or data.win.eventdata.targetFilename:"*.evtx")
 ```
 
-### Query 56: File Hiding Techniques
-*Detects file hiding and attribute manipulation*
+### Query 56: DLL Side-Loading
+*Detects DLL side-loading techniques*
 
 ```
-rule.level >= 7 and ((rule.groups:"sysmon" or rule.groups:"syscheck") and (data.win.eventdata.commandLine:"*attrib*+h*" or data.win.eventdata.commandLine:"*attrib*+s*" or data.win.eventdata.commandLine:"*attrib*+r*" or rule.description:"*hidden*attribute*" or rule.description:"*system*attribute*")) or (data.command:"*chattr*+i*" or data.command:"*.hidden*")
+rule.level >= 10 and rule.groups:"sysmon" and rule.id:"60007" and data.win.eventdata.signed:"false" and not (data.win.eventdata.imageLoaded:"C:\\Windows\\System32\\*" or data.win.eventdata.imageLoaded:"C:\\Windows\\SysWOW64\\*" or data.win.eventdata.imageLoaded:"C:\\Program Files\\*")
 ```
 
-### Query 57: Masquerading Detection
-*Detects processes masquerading as legitimate binaries*
+### Query 57: Code Signing Abuse
+*Detects execution of signed binaries from suspicious locations*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.originalFileName:* and not data.win.eventdata.image:"*\\Windows\\*" and not data.win.eventdata.image:"*\\Program Files*") and (data.win.eventdata.originalFileName:"svchost.exe" or data.win.eventdata.originalFileName:"lsass.exe" or data.win.eventdata.originalFileName:"services.exe" or data.win.eventdata.originalFileName:"csrss.exe" or data.win.eventdata.originalFileName:"smss.exe" or data.win.eventdata.originalFileName:"wininit.exe" or data.win.eventdata.originalFileName:"winlogon.exe" or data.win.eventdata.originalFileName:"explorer.exe" or data.win.eventdata.originalFileName:"rundll32.exe")
+rule.level >= 8 and rule.groups:"sysmon" and rule.id:"60001" and data.win.eventdata.signed:"true" and (data.win.eventdata.image:"*\\Temp\\*" or data.win.eventdata.image:"*\\AppData\\*" or data.win.eventdata.image:"*\\Users\\Public\\*")
 ```
 
-### Query 58: Indicator Removal from Tools
-*Detects removal of forensic artifacts*
+### Query 58: Rootkit Behavior
+*Detects rootkit-like behaviors and hidden processes*
 
 ```
-rule.level >= 10 and (data.win.eventdata.commandLine:"*SDelete*" or data.win.eventdata.commandLine:"*cipher*/w*" or data.win.eventdata.commandLine:"*Eraser*" or data.win.eventdata.commandLine:"*BleachBit*" or data.win.eventdata.commandLine:"*CCleaner*" or data.command:"*shred*" or data.command:"*wipe*" or data.command:"*srm*" or data.command:"*secure-delete*")
+rule.level >= 12 and (rule.groups:"rootkit" or rule.groups:"malware") and (rule.id:"510" or rule.id:"511" or rule.id:"512" or rule.id:"513" or rule.id:"514" or rule.id:"515" or rule.id:"516" or rule.id:"517" or rule.id:"518" or rule.id:"519")
 ```
 
-### Query 59: Rootkit Indicators
-*Detects rootkit-like behavior*
+### Query 59: Obfuscated Files or Information
+*Detects heavily obfuscated commands and files*
 
 ```
-rule.level >= 12 and (rule.groups:"rootkit" or rule.groups:"rootcheck") and (rule.id:"510" or rule.id:"511" or rule.id:"512" or rule.id:"513" or rule.id:"514" or rule.id:"515" or rule.id:"516" or rule.id:"517" or rule.id:"518" or rule.id:"519" or rule.description:"*rootkit*" or rule.description:"*hidden*process*" or rule.description:"*hidden*file*" or rule.description:"*kernel*hook*")
+rule.level >= 10 and (rule.groups:"sysmon" or rule.groups:"powershell") and (data.win.eventdata.commandLine:*"^"^"^"* or data.win.eventdata.commandLine:*"+"+"+"* or data.win.eventdata.scriptBlockText:*"^"^"^"* or data.win.eventdata.scriptBlockText:*"+"+"+"*)
 ```
 
-### Query 60: Binary Padding/Packing Detection
-*Detects packed or padded executables*
+### Query 60: Impair Defenses - Firewall Modification
+*Detects changes to Windows Firewall configuration*
 
 ```
-rule.level >= 7 and rule.groups:"sysmon" and (rule.description:"*packed*" or rule.description:"*UPX*" or rule.description:"*entropy*" or rule.description:"*obfuscat*" or rule.description:"*crypter*" or rule.description:"*packer*")
+rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*netsh*firewall*" or data.win.eventdata.commandLine:"*netsh*advfirewall*" or data.win.eventdata.commandLine:"*Set-NetFirewallProfile*" or data.win.eventdata.commandLine:"*Disable-NetFirewall*")
 ```
 
 ---
 
 ## 7. Credential Access & Theft
 
-### Query 61: LSASS Memory Access (Comprehensive)
-*Detects all LSASS memory access attempts*
+### Query 61: LSASS Memory Dumping
+*Detects attempts to dump LSASS process memory*
 
 ```
-rule.level >= 12 and rule.groups:"sysmon" and (rule.id:"60010" or data.win.eventdata.targetImage:"*\\lsass.exe") and not (data.win.eventdata.sourceImage:"*\\MsMpEng.exe" or data.win.eventdata.sourceImage:"*\\csrss.exe" or data.win.eventdata.sourceImage:"*\\wininit.exe" or data.win.eventdata.sourceImage:"*\\svchost.exe")
+rule.level >= 12 and rule.groups:"sysmon" and rule.id:"60010" and data.win.eventdata.targetImage:"*\\lsass.exe" and (data.win.eventdata.grantedAccess:"0x1010" or data.win.eventdata.grantedAccess:"0x1410" or data.win.eventdata.grantedAccess:"0x1fffff")
 ```
 
-### Query 62: SAM/SYSTEM/SECURITY Hive Access
-*Detects access to credential storage hives*
+### Query 62: Credential Dumping Tools Execution
+*Detects execution of known credential dumping tools*
 
 ```
-rule.level >= 12 and rule.groups:"sysmon" and (data.win.eventdata.targetFilename:"*\\SAM" or data.win.eventdata.targetFilename:"*\\SYSTEM" or data.win.eventdata.targetFilename:"*\\SECURITY" or data.win.eventdata.targetFilename:"*\\NTDS.dit" or data.win.eventdata.commandLine:"*reg*save*SAM*" or data.win.eventdata.commandLine:"*reg*save*SYSTEM*" or data.win.eventdata.commandLine:"*reg*save*SECURITY*" or data.win.eventdata.commandLine:"*ntdsutil*" or data.win.eventdata.commandLine:"*vssadmin*shadow*")
+rule.level >= 12 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\mimikatz*" or data.win.eventdata.image:"*\\procdump*" or data.win.eventdata.image:"*\\pwdump*" or data.win.eventdata.commandLine:"*sekurlsa::*" or data.win.eventdata.commandLine:"*lsadump::*" or data.win.eventdata.originalFileName:"mimikatz.exe" or data.win.eventdata.originalFileName:"procdump.exe")
 ```
 
-### Query 63: Credential Manager Access
-*Detects Windows Credential Manager access*
+### Query 63: DCSync Attack Detection
+*Detects DCSync attack against Active Directory*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.targetFilename:"*\\Credentials\\*" or data.win.eventdata.targetFilename:"*\\Vault\\*" or data.win.eventdata.commandLine:"*vaultcmd*" or data.win.eventdata.commandLine:"*cmdkey*" or data.win.eventdata.commandLine:"*CredentialManager*" or rule.description:"*credential*manager*")
+rule.level >= 12 and rule.groups:"windows" and data.win.system.eventID:"4662" and (data.win.eventdata.properties:"*1131f6aa-9c07-11d1-f79f-00c04fc2dcd2*" or data.win.eventdata.properties:"*1131f6ad-9c07-11d1-f79f-00c04fc2dcd2*") and not data.win.eventdata.subjectUserName:"*$"
 ```
 
-### Query 64: Browser Credential Theft
+### Query 64: Kerberoasting Detection
+*Detects Kerberoasting attacks (SPN ticket requests)*
+
+```
+rule.level >= 10 and rule.groups:"windows" and data.win.system.eventID:"4769" and data.win.eventdata.ticketEncryptionType:"0x17" and not (data.win.eventdata.serviceName:"krbtgt" or data.win.eventdata.serviceName:"*$")
+```
+
+### Query 65: AS-REP Roasting Detection
+*Detects AS-REP roasting attempts*
+
+```
+rule.level >= 10 and rule.groups:"windows" and data.win.system.eventID:"4768" and data.win.eventdata.preAuthType:"0"
+```
+
+### Query 66: SAM Registry Hive Access
+*Detects access to SAM registry hive for credential theft*
+
+```
+rule.level >= 12 and rule.groups:"sysmon" and rule.id:"60012" and (data.win.eventdata.targetObject:"*\\SAM\\SAM\\Domains\\Account\\Users\\*" or data.win.eventdata.targetObject:"*\\SECURITY\\Policy\\Secrets\\*")
+```
+
+### Query 67: NTDS.dit Access
+*Detects attempts to access Active Directory database file*
+
+```
+rule.level >= 12 and rule.groups:"sysmon" and (rule.id:"60011" or rule.id:"60015") and data.win.eventdata.targetFilename:"*\\NTDS.dit"
+```
+
+### Query 68: Credential Manager Access
+*Detects access to Windows Credential Manager*
+
+```
+rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*vaultcmd*" or data.win.eventdata.commandLine:"*VaultPasswordV*" or data.win.eventdata.targetFilename:"*\\Microsoft\\Vault\\*" or data.win.eventdata.targetFilename:"*\\Microsoft\\Credentials\\*")
+```
+
+### Query 69: Browser Credential Theft
 *Detects access to browser credential stores*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.targetFilename:"*\\Login Data*" or data.win.eventdata.targetFilename:"*\\logins.json*" or data.win.eventdata.targetFilename:"*\\signons.sqlite*" or data.win.eventdata.targetFilename:"*\\cookies.sqlite*" or data.win.eventdata.targetFilename:"*\\Chrome\\User Data\\*" or data.win.eventdata.targetFilename:"*\\Firefox\\Profiles\\*" or data.win.eventdata.targetFilename:"*\\Microsoft\\Edge\\*")
+rule.level >= 10 and rule.groups:"sysmon" and (rule.id:"60011" or rule.id:"60015") and (data.win.eventdata.targetFilename:"*\\Google\\Chrome\\User Data\\Default\\Login Data*" or data.win.eventdata.targetFilename:"*\\Mozilla\\Firefox\\Profiles\\*\\logins.json*" or data.win.eventdata.targetFilename:"*\\Microsoft\\Edge\\User Data\\Default\\Login Data*")
 ```
 
-### Query 65: Kerberoasting Attack Detection
-*Detects service ticket requests with RC4 encryption*
+### Query 70: Network Sniffing & Packet Capture
+*Detects network sniffing tools and packet capture*
 
 ```
-rule.level >= 10 and rule.groups:"windows" and (rule.id:"4769") and (data.win.eventdata.ticketEncryptionType:"0x17" or data.win.eventdata.ticketEncryptionType:"0x18")
-```
-
-### Query 66: AS-REP Roasting Detection
-*Detects AS-REP roasting attacks*
-
-```
-rule.level >= 10 and rule.groups:"windows" and rule.id:"4768" and data.win.eventdata.preAuthType:"0"
-```
-
-### Query 67: DCSync Attack Detection
-*Detects DCSync replication attacks*
-
-```
-rule.level >= 12 and rule.groups:"windows" and (rule.id:"4662") and (data.win.eventdata.properties:"*1131f6ad-9c07-11d1-f79f-00c04fc2dcd2*" or data.win.eventdata.properties:"*1131f6aa-9c07-11d1-f79f-00c04fc2dcd2*" or data.win.eventdata.properties:"*89e95b76-444d-4c62-991a-0facbeda640c*")
-```
-
-### Query 68: Linux Shadow File Access
-*Detects access to /etc/shadow and related files*
-
-```
-rule.level >= 10 and (rule.groups:"syscheck" or rule.groups:"audit") and (syscheck.path:"/etc/shadow" or syscheck.path:"/etc/shadow-" or syscheck.path:"/etc/gshadow" or syscheck.path:"/etc/passwd" or data.command:"*cat*/etc/shadow*" or data.command:"*cat*/etc/passwd*" or data.command:"*unshadow*" or data.command:"*john*")
-```
-
-### Query 69: SSH Key Theft Detection
-*Detects access to SSH private keys*
-
-```
-rule.level >= 10 and (rule.groups:"syscheck" or rule.groups:"audit") and (syscheck.path:"*/.ssh/id_rsa" or syscheck.path:"*/.ssh/id_dsa" or syscheck.path:"*/.ssh/id_ecdsa" or syscheck.path:"*/.ssh/id_ed25519" or syscheck.path:"*/.ssh/authorized_keys" or syscheck.path:"*/.ssh/known_hosts" or data.command:"*cat*id_rsa*" or data.command:"*cat*authorized_keys*")
-```
-
-### Query 70: Password Spraying Detection
-*Detects password spray attacks (many users, few passwords)*
-
-```
-rule.level >= 10 and (rule.groups:"authentication_failed" or rule.groups:"invalid_login") and (rule.id:"5710" or rule.id:"5711" or rule.id:"5712" or rule.id:"60122" or rule.id:"60204" or rule.id:"4625" or rule.id:"4771")
+rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\wireshark*" or data.win.eventdata.image:"*\\tshark*" or data.win.eventdata.image:"*\\tcpdump*" or data.win.eventdata.commandLine:"*Invoke-Inveigh*" or data.win.eventdata.commandLine:"*net.sockets*" or data.win.eventdata.driverLoaded:"*\\WinDivert*" or data.win.eventdata.driverLoaded:"*\\npf.sys*")
 ```
 
 ---
 
 ## 8. Lateral Movement
 
-### Query 71: RDP Lateral Movement (Internal)
-*Detects RDP connections from internal sources*
+### Query 71: PSExec Usage Detection
+*Detects PSExec and similar remote execution tools*
 
 ```
-rule.level >= 7 and rule.groups:"windows" and (rule.id:"4624" or rule.id:"4625") and data.win.eventdata.logonType:"10" and (data.win.eventdata.ipAddress:"10.*" or data.win.eventdata.ipAddress:"192.168.*" or data.win.eventdata.ipAddress:"172.16.*" or data.win.eventdata.ipAddress:"172.17.*" or data.win.eventdata.ipAddress:"172.18.*" or data.win.eventdata.ipAddress:"172.19.*" or data.win.eventdata.ipAddress:"172.20.*" or data.win.eventdata.ipAddress:"172.21.*" or data.win.eventdata.ipAddress:"172.22.*" or data.win.eventdata.ipAddress:"172.23.*" or data.win.eventdata.ipAddress:"172.24.*" or data.win.eventdata.ipAddress:"172.25.*" or data.win.eventdata.ipAddress:"172.26.*" or data.win.eventdata.ipAddress:"172.27.*" or data.win.eventdata.ipAddress:"172.28.*" or data.win.eventdata.ipAddress:"172.29.*" or data.win.eventdata.ipAddress:"172.30.*" or data.win.eventdata.ipAddress:"172.31.*")
+rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\psexec.exe" or data.win.eventdata.image:"*\\PSEXESVC.exe" or data.win.eventdata.originalFileName:"psexec.c" or data.win.eventdata.serviceName:"PSEXESVC" or data.win.eventdata.commandLine:"*\\admin$\\*")
 ```
 
-### Query 72: SSH Lateral Movement (Internal)
-*Detects SSH connections between internal hosts*
+### Query 72: Remote Desktop Protocol (RDP) Lateral Movement
+*Detects suspicious RDP connections*
 
 ```
-rule.level >= 5 and rule.groups:"sshd" and rule.groups:"authentication_success" and (data.srcip:"10.*" or data.srcip:"192.168.*" or data.srcip:"172.16.*" or data.srcip:"172.17.*" or data.srcip:"172.18.*" or data.srcip:"172.19.*" or data.srcip:"172.20.*" or data.srcip:"172.21.*" or data.srcip:"172.22.*" or data.srcip:"172.23.*" or data.srcip:"172.24.*" or data.srcip:"172.25.*" or data.srcip:"172.26.*" or data.srcip:"172.27.*" or data.srcip:"172.28.*" or data.srcip:"172.29.*" or data.srcip:"172.30.*" or data.srcip:"172.31.*")
+rule.level >= 8 and rule.groups:"windows" and (data.win.system.eventID:"4624" or data.win.system.eventID:"4778") and data.win.eventdata.logonType:"10" and not data.srcip:"10.*"
 ```
 
-### Query 73: Pass-the-Hash Detection
-*Detects NTLM authentication with Pass-the-Hash indicators*
+### Query 73: Windows Admin Shares Access
+*Detects access to administrative network shares (C$, ADMIN$)*
 
 ```
-rule.level >= 12 and rule.groups:"windows" and rule.id:"4624" and (data.win.eventdata.logonType:"9" or data.win.eventdata.logonType:"3") and data.win.eventdata.logonProcessName:"seclogo"
+rule.level >= 8 and rule.groups:"windows" and data.win.system.eventID:"5140" and (data.win.eventdata.shareName:"\\\\*\\ADMIN$" or data.win.eventdata.shareName:"\\\\*\\C$" or data.win.eventdata.shareName:"\\\\*\\IPC$")
 ```
 
-### Query 74: Pass-the-Ticket Detection
-*Detects Kerberos ticket reuse attacks*
+### Query 74: WMI Remote Execution
+*Detects WMI used for remote command execution*
 
 ```
-rule.level >= 12 and rule.groups:"windows" and (rule.id:"4768" or rule.id:"4769" or rule.id:"4770") and (data.win.eventdata.ticketOptions:"*0x40810000*" or data.win.eventdata.ticketOptions:"*0x40800000*" or data.win.eventdata.ticketOptions:"*0x60810010*")
+rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\wmic.exe" or data.win.eventdata.image:"*\\mofcomp.exe") and data.win.eventdata.commandLine:"*/node:*"
 ```
 
-### Query 75: WMI Remote Execution
-*Detects WMI-based lateral movement*
+### Query 75: Remote Service Creation
+*Detects remote service creation (e.g., sc.exe)*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\wmiprvse.exe" or data.win.eventdata.parentImage:"*\\wmiprvse.exe" or data.win.eventdata.commandLine:"*wmic*/node:*" or data.win.eventdata.commandLine:"*Invoke-WmiMethod*" or data.win.eventdata.commandLine:"*Get-WmiObject*" or data.win.eventdata.commandLine:"*Set-WmiInstance*")
+rule.level >= 10 and rule.groups:"sysmon" and data.win.eventdata.image:"*\\sc.exe" and (data.win.eventdata.commandLine:"*\\\\*" or data.win.eventdata.commandLine:"*create*")
 ```
 
-### Query 76: WinRM/PSRemoting Lateral Movement
-*Detects PowerShell Remoting usage*
+### Query 76: SMB/Windows File Sharing
+*Detects lateral movement via SMB*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\wsmprovhost.exe" or data.win.eventdata.parentImage:"*\\wsmprovhost.exe" or data.win.eventdata.commandLine:"*Enter-PSSession*" or data.win.eventdata.commandLine:"*Invoke-Command*-ComputerName*" or data.win.eventdata.commandLine:"*New-PSSession*" or data.win.eventdata.commandLine:"*winrs*")
+rule.level >= 7 and rule.groups:"windows" and (data.win.system.eventID:"5140" or data.win.system.eventID:"5145") and not data.srcip:"10.*"
 ```
 
-### Query 77: SMB Admin Share Access
-*Detects access to administrative shares*
+### Query 77: Pass-the-Hash Attack Detection
+*Detects Pass-the-Hash authentication attempts*
 
 ```
-rule.level >= 7 and rule.groups:"windows" and (rule.id:"5140" or rule.id:"5145") and (data.win.eventdata.shareName:"\\\\*\\ADMIN$" or data.win.eventdata.shareName:"\\\\*\\C$" or data.win.eventdata.shareName:"\\\\*\\IPC$" or data.win.eventdata.shareName:"\\\\*\\D$" or data.win.eventdata.shareName:"\\\\*\\E$")
+rule.level >= 12 and rule.groups:"windows" and data.win.system.eventID:"4624" and data.win.eventdata.logonType:"3" and data.win.eventdata.logonProcessName:"NtLmSsp" and data.win.eventdata.keyLength:"0"
 ```
 
-### Query 78: PsExec Execution Detection
-*Detects PsExec and similar remote execution tools*
+### Query 78: Remote Scheduled Task Creation
+*Detects scheduled tasks created on remote systems*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\psexec*" or data.win.eventdata.parentImage:"*\\psexec*" or data.win.eventdata.image:"*\\PSEXESVC.exe" or data.win.eventdata.commandLine:"*psexec*" or data.win.eventdata.commandLine:"*paexec*" or data.win.eventdata.commandLine:"*remcom*" or data.win.eventdata.commandLine:"*csexec*")
+rule.level >= 10 and rule.groups:"sysmon" and data.win.eventdata.image:"*\\schtasks.exe" and data.win.eventdata.commandLine:"*/s*" and data.win.eventdata.commandLine:"*/create*"
 ```
 
-### Query 79: DCOM Lateral Movement
-*Detects DCOM-based remote execution*
+### Query 79: Distributed Component Object Model (DCOM)
+*Detects DCOM-based lateral movement*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.parentImage:"*\\mmc.exe" or data.win.eventdata.parentImage:"*\\excel.exe" or data.win.eventdata.parentImage:"*\\outlook.exe") and (data.win.eventdata.image:"*\\cmd.exe" or data.win.eventdata.image:"*\\powershell.exe" or data.win.eventdata.image:"*\\mshta.exe") and data.win.eventdata.commandLine:"*-Embedding*"
+rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\mmc.exe" or data.win.eventdata.image:"*\\excel.exe" or data.win.eventdata.image:"*\\outlook.exe") and data.win.eventdata.commandLine:"*-Embedding*"
 ```
 
-### Query 80: Remote Service Creation
-*Detects remote service installation for lateral movement*
+### Query 80: SSH Lateral Movement (Linux)
+*Detects SSH connections from internal hosts*
 
 ```
-rule.level >= 10 and rule.groups:"windows" and (rule.id:"7045" or rule.id:"7040") and (data.win.eventdata.imagePath:"*\\\\*" or data.win.eventdata.imagePath:"*cmd*" or data.win.eventdata.imagePath:"*powershell*")
+rule.level >= 7 and rule.groups:"sshd" and rule.description:"*Accepted*" and data.srcip:"10.*"
 ```
 
 ---
 
 ## 9. Collection & Exfiltration
 
-### Query 81: Data Staging (Archive Creation)
-*Detects creation of data archives for exfiltration*
+### Query 81: Screen Capture Tools
+*Detects execution of screenshot and screen recording tools*
 
 ```
-rule.level >= 7 and (rule.groups:"sysmon" or rule.groups:"syscheck") and (data.win.eventdata.targetFilename:"*.zip" or data.win.eventdata.targetFilename:"*.rar" or data.win.eventdata.targetFilename:"*.7z" or data.win.eventdata.targetFilename:"*.tar" or data.win.eventdata.targetFilename:"*.gz" or data.win.eventdata.targetFilename:"*.cab" or data.win.eventdata.commandLine:"*Compress-Archive*" or data.win.eventdata.commandLine:"*zip*" or data.win.eventdata.commandLine:"*rar*" or data.win.eventdata.commandLine:"*7z*" or data.command:"*tar*czf*" or data.command:"*zip*-r*" or data.command:"*gzip*")
+rule.level >= 8 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\SnippingTool.exe" or data.win.eventdata.image:"*\\screencapture*" or data.win.eventdata.commandLine:"*screenshot*" or data.win.eventdata.commandLine:"*Get-Screenshot*")
 ```
 
-### Query 82: Screenshot/Screen Capture Detection
-*Detects screen capture activities*
+### Query 82: Clipboard Data Collection
+*Detects clipboard access and monitoring*
 
 ```
-rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*screenshot*" or data.win.eventdata.commandLine:"*screen*capture*" or data.win.eventdata.commandLine:"*printscreen*" or data.win.eventdata.commandLine:"*Get-Screenshot*" or data.win.eventdata.commandLine:"*[System.Windows.Forms.Screen]*" or data.win.eventdata.commandLine:"*CopyFromScreen*" or data.win.eventdata.commandLine:"*BitBlt*")
+rule.level >= 8 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*Get-Clipboard*" or data.win.eventdata.commandLine:"*Set-Clipboard*" or data.win.eventdata.scriptBlockText:"*Windows.Clipboard*")
 ```
 
-### Query 83: Keylogger Indicators
-*Detects potential keylogging activities*
+### Query 83: Audio/Video Recording
+*Detects microphone and camera access*
 
 ```
-rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*GetAsyncKeyState*" or data.win.eventdata.commandLine:"*SetWindowsHookEx*" or data.win.eventdata.commandLine:"*keylog*" or data.win.eventdata.commandLine:"*keystroke*" or data.win.eventdata.commandLine:"*keyboard*hook*" or rule.description:"*keylog*" or rule.description:"*keystroke*")
+rule.level >= 10 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*audio*" or data.win.eventdata.commandLine:"*microphone*" or data.win.eventdata.commandLine:"*webcam*" or data.win.eventdata.commandLine:"*camera*")
 ```
 
-### Query 84: Clipboard Data Access
-*Detects clipboard monitoring and theft*
+### Query 84: Email Collection
+*Detects email data collection and PST file access*
 
 ```
-rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.commandLine:"*Get-Clipboard*" or data.win.eventdata.commandLine:"*[Windows.Forms.Clipboard]*" or data.win.eventdata.commandLine:"*GetClipboardData*" or data.win.eventdata.commandLine:"*OpenClipboard*" or data.win.eventdata.commandLine:"*clip.exe*")
+rule.level >= 8 and rule.groups:"sysmon" and (data.win.eventdata.targetFilename:"*.pst" or data.win.eventdata.targetFilename:"*.ost" or data.win.eventdata.commandLine:"*Export-Mailbox*" or data.win.eventdata.commandLine:"*Get-Mailbox*")
 ```
 
-### Query 85: Email Collection Detection
-*Detects access to email data stores*
+### Query 85: Archive Collection (RAR, ZIP, 7z)
+*Detects creation of archives (common pre-exfiltration activity)*
 
 ```
-rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.targetFilename:"*.pst" or data.win.eventdata.targetFilename:"*.ost" or data.win.eventdata.targetFilename:"*.msg" or data.win.eventdata.targetFilename:"*.eml" or data.win.eventdata.commandLine:"*New-MailboxExportRequest*" or data.win.eventdata.commandLine:"*Export-Mailbox*" or data.win.eventdata.targetFilename:"*\\Microsoft\\Outlook\\*")
+rule.level >= 7 and rule.groups:"sysmon" and (data.win.eventdata.image:"*\\rar.exe" or data.win.eventdata.image:"*\\7z.exe" or data.win.eventdata.image:"*\\winrar.exe" or data.win.eventdata.commandLine:"*Compress-Archive*" or data.win.eventdata.targetFilename:"*.zip" or data.win.eventdata.targetFilename:"*.rar" or data.win.eventdata.targetFilename:"*.7z")
 ```
 
-### Query 86: DNS Tunneling Detection
-*Detects potential DNS exfiltration*
+### Query 86: Data Staging in Unusual Locations
+*Detects data staged in preparation for exfiltration*
 
 ```
-rule.level >= 10 and (rule.groups:"dns" or rule.groups:"named" or rule.groups:"network") and (rule.description:"*tunnel*" or rule.description:"*unusually*long*" or rule.description:"*base64*" or rule.description:"*encoded*" or rule.description:"*high*frequency*" or rule.description:"*suspicious*subdomain*")
+rule.level >= 8 and rule.groups:"sysmon" and rule.id:"60011" and (data.win.eventdata.targetFilename:"*\\Users\\Public\\*" or data.win.eventdata.targetFilename:"*\\ProgramData\\*" or data.win.eventdata.targetFilename:"*\\Temp\\*") and (data.win.eventdata.targetFilename:"*.zip" or data.win.eventdata.targetFilename:"*.rar" or data.win.eventdata.targetFilename:"*.7z" or data.win.eventdata.targetFilename:"*.tar")
 ```
 
-### Query 87: HTTP/HTTPS Data Exfiltration
-*Detects potential data exfiltration over HTTP(S)*
+### Query 87: Large File Transfers
+*Detects large file transfers (potential exfiltration)*
 
 ```
-rule.level >= 7 and (rule.groups:"web" or rule.groups:"network") and (rule.description:"*large*upload*" or rule.description:"*POST*data*" or rule.description:"*exfil*" or rule.description:"*transfer*" or data.url:"*pastebin*" or data.url:"*paste.ee*" or data.url:"*hastebin*" or data.url:"*ghostbin*" or data.url:"*dpaste*" or data.url:"*transfer.sh*" or data.url:"*file.io*" or data.url:"*0x0.st*")
+rule.level >= 7 and (rule.groups:"web" or rule.groups:"firewall" or rule.groups:"proxy") and data.bytes_sent:>10000000
 ```
 
-### Query 88: Cloud Storage Exfiltration
+### Query 88: Cloud Storage Upload Detection
 *Detects uploads to cloud storage services*
 
 ```
-rule.level >= 7 and (rule.groups:"sysmon" or rule.groups:"network") and (data.url:"*dropbox.com*" or data.url:"*drive.google.com*" or data.url:"*onedrive.live.com*" or data.url:"*icloud.com*" or data.url:"*box.com*" or data.url:"*mega.nz*" or data.url:"*mediafire.com*" or data.url:"*wetransfer.com*" or data.url:"*sendspace.com*" or data.url:"*4shared.com*")
+rule.level >= 7 and (rule.groups:"proxy" or rule.groups:"web" or rule.groups:"firewall") and (data.url:"*dropbox.com*" or data.url:"*drive.google.com*" or data.url:"*onedrive.com*" or data.url:"*box.com*" or data.url:"*mega.nz*" or data.url:"*wetransfer.com*")
 ```
 
-### Query 89: FTP/SFTP Data Transfer
-*Detects FTP-based data transfers*
+### Query 89: DNS Exfiltration Detection
+*Detects DNS tunneling and exfiltration*
 
 ```
-rule.level >= 7 and (rule.groups:"network" or rule.groups:"sysmon" or rule.groups:"audit") and (data.dstport:"21" or data.dstport:"22" or data.dstport:"990" or data.win.eventdata.commandLine:"*ftp*" or data.win.eventdata.commandLine:"*sftp*" or data.win.eventdata.commandLine:"*scp*" or data.win.eventdata.commandLine:"*winscp*" or data.win.eventdata.commandLine:"*filezilla*" or data.command:"*ftp*" or data.command:"*sftp*" or data.command:"*scp*")
+rule.level >= 10 and rule.groups:"dns" and (data.query_length:>50 or rule.description:"*tunnel*" or rule.description:"*exfiltration*")
 ```
 
-### Query 90: USB/Removable Media Exfiltration
-*Detects data transfer to removable media*
+### Query 90: FTP/SFTP File Transfers
+*Detects FTP and SFTP file transfer activity*
 
 ```
-rule.level >= 7 and (rule.groups:"sysmon" or rule.groups:"windows") and (rule.id:"60023" or rule.description:"*removable*" or rule.description:"*USB*" or rule.description:"*external*drive*" or data.win.eventdata.targetFilename:"*:\\*" and not data.win.eventdata.targetFilename:"C:\\*")
+rule.level >= 7 and (rule.groups:"network" or rule.groups:"firewall") and (data.dstport:"21" or data.dstport:"22" or data.dstport:"990") and data.protocol:"TCP"
 ```
 
 ---
 
 ## 10. Command & Control
 
-### Query 91: Beaconing Detection (Regular Intervals)
-*Detects C2 beaconing patterns*
+### Query 91: Suspicious Outbound Network Connections
+*Detects outbound connections to uncommon ports*
 
 ```
-rule.level >= 7 and (rule.groups:"network" or rule.groups:"firewall" or rule.groups:"proxy") and (rule.description:"*beacon*" or rule.description:"*periodic*" or rule.description:"*interval*" or rule.description:"*heartbeat*" or rule.description:"*callback*") and not (data.dstip:"10.*" or data.dstip:"192.168.*" or data.dstip:"172.16.*" or data.dstip:"172.17.*" or data.dstip:"172.18.*" or data.dstip:"172.19.*" or data.dstip:"172.20.*" or data.dstip:"172.21.*" or data.dstip:"172.22.*" or data.dstip:"172.23.*" or data.dstip:"172.24.*" or data.dstip:"172.25.*" or data.dstip:"172.26.*" or data.dstip:"172.27.*" or data.dstip:"172.28.*" or data.dstip:"172.29.*" or data.dstip:"172.30.*" or data.dstip:"172.31.*")
+rule.level >= 7 and rule.groups:"firewall" and not (data.dstport:"80" or data.dstport:"443" or data.dstport:"53" or data.dstport:"22" or data.dstport:"21" or data.dstport:"25" or data.dstport:"110" or data.dstport:"143" or data.dstport:"3389" or data.dstport:"445")
 ```
 
-### Query 92: Known C2 Framework Indicators
-*Detects known C2 framework patterns*
+### Query 92: Long-Running Network Connections (Beaconing)
+*Detects persistent network connections indicative of C2 beaconing*
 
 ```
-rule.level >= 12 and (rule.description:"*Cobalt Strike*" or rule.description:"*Metasploit*" or rule.description:"*Empire*" or rule.description:"*Covenant*" or rule.description:"*Merlin*" or rule.description:"*PoshC2*" or rule.description:"*Sliver*" or rule.description:"*Brute Ratel*" or rule.description:"*Havoc*" or rule.description:"*Mythic*" or data.win.eventdata.commandLine:"*beacon*" or data.win.eventdata.commandLine:"*meterpreter*" or data.win.eventdata.commandLine:"*payload*")
+rule.level >= 10 and (rule.groups:"network" or rule.groups:"firewall") and data.connection_duration:>3600
 ```
 
-### Query 93: Non-Standard Port Usage for C2
-*Detects communication on unusual ports*
+### Query 93: Non-Standard User-Agent Strings
+*Detects suspicious HTTP User-Agent strings*
 
 ```
-rule.level >= 7 and (rule.groups:"network" or rule.groups:"firewall") and (data.dstport:"4444" or data.dstport:"5555" or data.dstport:"6666" or data.dstport:"7777" or data.dstport:"8888" or data.dstport:"9999" or data.dstport:"1234" or data.dstport:"31337" or data.dstport:"12345" or data.dstport:"54321" or data.dstport:"1337" or data.dstport:"6667" or data.dstport:"6697" or data.dstport:"8080" or data.dstport:"8443" or data.dstport:"9090" or data.dstport:"9443")
+rule.level >= 7 and (rule.groups:"web" or rule.groups:"proxy") and (data.user_agent:"*python*" or data.user_agent:"*powershell*" or data.user_agent:"*curl*" or data.user_agent:"*wget*" or data.user_agent:"*scanner*" or data.user_agent:"*bot*")
 ```
 
 ### Query 94: Encoded/Obfuscated C2 Communication
@@ -765,6 +766,130 @@ rule.level >= 10 and ((rule.groups:"network" or rule.groups:"firewall" or rule.g
 
 ---
 
+## 11. DoS & DDoS Attack Detection
+
+### Query 101: SYN Flood Detection
+*Detects TCP SYN flood attacks based on high volume of SYN packets*
+*MITRE Technique: T1498 - Network Denial of Service*
+
+```
+rule.level >= 10 and (rule.groups:"firewall" or rule.groups:"ids" or rule.groups:"network") and (rule.description:"*SYN*flood*" or rule.description:"*TCP*flood*" or rule.id:"86600") and data.protocol:"TCP"
+```
+
+### Query 102: HTTP/HTTPS Flood Detection
+*Detects application-layer DDoS via excessive HTTP requests*
+*MITRE Technique: T1499.004 - Application or System Exploitation*
+
+```
+rule.level >= 10 and (rule.groups:"web" or rule.groups:"accesslog" or rule.groups:"apache" or rule.groups:"nginx") and (rule.id:"31316" or rule.id:"31317" or rule.description:"*flood*" or rule.description:"*high*request*rate*" or rule.description:"*excessive*connections*")
+```
+
+### Query 103: ICMP Flood (Ping Flood) Detection
+*Detects ICMP-based denial of service attacks*
+*MITRE Technique: T1498.001 - Direct Network Flood*
+
+```
+rule.level >= 10 and (rule.groups:"firewall" or rule.groups:"ids" or rule.groups:"network") and (rule.description:"*ICMP*flood*" or rule.description:"*ping*flood*" or rule.description:"*ping*death*") and data.protocol:"ICMP"
+```
+
+### Query 104: UDP Flood Detection
+*Detects UDP-based flood attacks*
+*MITRE Technique: T1498.001 - Direct Network Flood*
+
+```
+rule.level >= 10 and (rule.groups:"firewall" or rule.groups:"ids" or rule.groups:"network") and (rule.description:"*UDP*flood*" or rule.description:"*UDP*amplification*") and data.protocol:"UDP"
+```
+
+### Query 105: DNS Amplification Attack
+*Detects DNS amplification DDoS attacks*
+*MITRE Technique: T1498.002 - Reflection Amplification*
+
+```
+rule.level >= 10 and (rule.groups:"dns" or rule.groups:"network" or rule.groups:"firewall") and (rule.description:"*DNS*amplification*" or rule.description:"*DNS*reflection*" or data.query_type:"ANY") and data.response_size:>512
+```
+
+### Query 106: NTP Amplification Attack
+*Detects NTP amplification DDoS attacks*
+*MITRE Technique: T1498.002 - Reflection Amplification*
+
+```
+rule.level >= 10 and (rule.groups:"network" or rule.groups:"firewall") and data.dstport:"123" and (rule.description:"*NTP*amplification*" or rule.description:"*monlist*")
+```
+
+### Query 107: Slowloris Attack Detection
+*Detects Slowloris slow HTTP DoS attacks*
+*MITRE Technique: T1499.003 - Application Exhaustion Flood*
+
+```
+rule.level >= 10 and (rule.groups:"web" or rule.groups:"apache" or rule.groups:"nginx") and (rule.description:"*slowloris*" or rule.description:"*slow*http*" or rule.description:"*slow*request*" or rule.description:"*keep-alive*abuse*")
+```
+
+### Query 108: Suricata DoS/DDoS Alerts
+*Comprehensive detection using Suricata IDS for DoS/DDoS patterns*
+*MITRE Technique: T1498 - Network Denial of Service*
+
+```
+rule.level >= 10 and rule.groups:"suricata" and (rule.description:"*DOS*" or rule.description:"*DDOS*" or rule.description:"*DoS*" or rule.description:"*DDoS*" or rule.description:"*denial*service*" or rule.description:"*flood*attack*" or rule.id:"86600")
+```
+
+### Query 109: GoldenEye DoS Attack
+*Detects GoldenEye HTTP DoS tool*
+*MITRE Technique: T1499.004 - Application or System Exploitation*
+
+```
+rule.level >= 12 and rule.groups:"suricata" and (rule.id:"100200" or rule.description:"*GoldenEye*DoS*" or rule.description:"*ET DOS Inbound GoldenEye*")
+```
+
+### Query 110: Connection Rate Anomaly Detection
+*Detects abnormally high connection rates from single sources*
+*MITRE Technique: T1498 - Network Denial of Service*
+
+```
+rule.level >= 10 and (rule.groups:"firewall" or rule.groups:"network" or rule.groups:"sshd") and (rule.id:"5710" or rule.id:"5711" or rule.id:"5712") and rule.description:"*multiple*connection*"
+```
+
+### Query 111: Resource Exhaustion (CPU/Memory/Disk)
+*Detects system resource exhaustion attacks*
+*MITRE Technique: T1499 - Endpoint Denial of Service*
+
+```
+rule.level >= 10 and (rule.groups:"sysmon" or rule.groups:"windows" or rule.groups:"linux") and (rule.description:"*high*cpu*" or rule.description:"*memory*exhaustion*" or rule.description:"*disk*full*" or rule.description:"*resource*limit*")
+```
+
+### Query 112: Distributed Scanning Activity
+*Detects coordinated port scanning (DDoS reconnaissance)*
+*MITRE Technique: T1046 - Network Service Discovery*
+
+```
+rule.level >= 8 and (rule.groups:"firewall" or rule.groups:"ids") and (rule.id:"5706" or rule.id:"5710") and rule.description:"*scan*" and data.alert_count:>100
+```
+
+### Query 113: Application-Layer Attack (Wordpress XML-RPC)
+*Detects XML-RPC amplification attacks on WordPress*
+*MITRE Technique: T1499.004 - Application or System Exploitation*
+
+```
+rule.level >= 10 and (rule.groups:"web" or rule.groups:"wordpress") and (data.url:"*xmlrpc.php*" or rule.description:"*XML-RPC*") and data.method:"POST"
+```
+
+### Query 114: Memcached Amplification Attack
+*Detects Memcached DDoS amplification attacks*
+*MITRE Technique: T1498.002 - Reflection Amplification*
+
+```
+rule.level >= 10 and (rule.groups:"network" or rule.groups:"firewall") and data.dstport:"11211" and (rule.description:"*memcached*amplification*" or data.command:"stats*")
+```
+
+### Query 115: Multi-Vector DDoS Detection (Comprehensive)
+*Master query combining multiple DDoS attack indicators*
+*MITRE Technique: T1498 - Network Denial of Service*
+
+```
+rule.level >= 10 and ((rule.groups:"dos" or rule.groups:"ddos" or rule.groups:"suricata" or rule.groups:"firewall") and (rule.description:"*DOS*" or rule.description:"*DDOS*" or rule.description:"*flood*" or rule.description:"*amplification*" or rule.description:"*denial*service*")) or (rule.id:"86600" or rule.id:"100200" or rule.id:"31316" or rule.id:"5710" or rule.id:"5711" or rule.id:"5712")
+```
+
+---
+
 ## Quick Reference
 
 ### Severity Levels
@@ -785,16 +910,30 @@ scan, reconnaissance, privilege_escalation
 lateral_movement, credential_access, exfiltration
 syscheck, fim, sysmon, windows, sshd, sudo
 powershell, audit, network, firewall, proxy
+suricata, ids, apache, nginx, wordpress
 ```
 
 ### Key Wazuh Rule IDs
 | Range | Category |
 |-------|----------|
-| 5xxx | SSH/PAM |
+| 5xxx | SSH/PAM/Connection |
 | 31xxx | Web Attacks |
 | 60xxx | Windows/Sysmon |
 | 510-519 | Rootkit |
 | 550-559 | FIM |
+| 86600 | Suricata Alerts |
+| 100200+ | Custom DoS/DDoS Rules |
+
+### DoS/DDoS Specific Rule IDs
+| Rule ID | Description |
+|---------|-------------|
+| 5710 | Multiple connection attempts |
+| 5711 | Multiple authentication failures |
+| 5712 | Multiple connection attempts (high) |
+| 31316 | Web server high error rate |
+| 31317 | Web server excessive requests |
+| 86600 | Suricata alert (DoS/DDoS patterns) |
+| 100200 | GoldenEye DoS attack |
 
 ---
 
@@ -805,25 +944,58 @@ powershell, audit, network, firewall, proxy
 3. **Customization**: Modify queries to match your environment's specific agent names, IP ranges, and rule configurations
 4. **False Positives**: Some queries may generate false positives - tune based on your baseline
 5. **Correlation**: Use multiple queries together to build attack timelines
+6. **Suricata Integration**: DoS/DDoS detection is significantly enhanced with Suricata IDS integration
 
 ---
 
 ## MITRE ATT&CK Coverage
 
-| Tactic | Queries |
-|--------|---------|
-| Initial Access | 1-10 |
-| Execution | 11-30 |
-| Persistence | 31-40 |
-| Privilege Escalation | 41-50 |
-| Defense Evasion | 51-60 |
-| Credential Access | 61-70 |
-| Lateral Movement | 71-80 |
-| Collection/Exfiltration | 81-90 |
-| Command & Control | 91-100 |
+| Tactic | Queries | MITRE IDs |
+|--------|---------|-----------|
+| Initial Access | 1-10 | T1190, T1133, T1078 |
+| Execution | 11-30 | T1059, T1203, T1204 |
+| Persistence | 31-40 | T1547, T1053, T1543 |
+| Privilege Escalation | 41-50 | T1068, T1134, T1548 |
+| Defense Evasion | 51-60 | T1562, T1070, T1055 |
+| Credential Access | 61-70 | T1003, T1558, T1110 |
+| Lateral Movement | 71-80 | T1021, T1570, T1563 |
+| Collection/Exfiltration | 81-90 | T1119, T1560, T1048 |
+| Command & Control | 91-100 | T1071, T1572, T1090 |
+| **DoS/DDoS** | **101-115** | **T1498, T1499** |
 
 ---
 
-**Document Version**: 1.0  
+## DoS/DDoS Detection Strategy
+
+### Detection Layers
+
+1. **Network Layer (L3/L4)**
+   - Queries 101, 103, 104, 106, 110, 114
+   - Focus: SYN floods, ICMP floods, UDP floods, amplification attacks
+
+2. **Application Layer (L7)**
+   - Queries 102, 107, 109, 113
+   - Focus: HTTP floods, Slowloris, XML-RPC abuse, application exploits
+
+3. **IDS Integration**
+   - Queries 108, 109
+   - Focus: Suricata-detected patterns, signature-based detection
+
+4. **Behavioral Analysis**
+   - Queries 110, 111, 112, 115
+   - Focus: Rate anomalies, resource exhaustion, distributed patterns
+
+### Recommended Approach
+
+1. **Deploy Suricata**: Integrate Suricata IDS with Wazuh for comprehensive network-level DoS/DDoS detection
+2. **Enable Web Server Logs**: Configure Apache/Nginx log monitoring for application-layer attacks
+3. **Set Thresholds**: Adjust rule levels and frequency thresholds based on your network baseline
+4. **Active Response**: Configure Wazuh active response with `firewall-drop` script for automatic blocking
+5. **Correlation**: Use queries 115 (comprehensive) alongside specific attack-type queries for validation
+
+---
+
+**Document Version**: 2.0  
 **Wazuh Version**: 4.11.2  
-**Last Updated**: January 2025
+**Last Updated**: January 2025  
+**New in v2.0**: Added 15 comprehensive DoS/DDoS detection queries (101-115) with MITRE ATT&CK coverage
